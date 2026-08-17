@@ -35,9 +35,9 @@ These are the concepts interviewers use to test whether later deep-learning answ
 Given data $\{(x_i,y_i)\}_{i=1}^N$, supervised learning usually solves
 
 
-$$
+```math
 \hat{\theta}=\arg\min_\theta \frac1N\sum_{i=1}^N \ell(f_\theta(x_i),y_i)+\lambda\Omega(\theta).
-$$
+```
 
 
 - $\ell$: data-fit loss.
@@ -47,9 +47,9 @@ $$
 The population objective is
 
 
-$$
+```math
 R(\theta)=\mathbb E_{(x,y)\sim p_{\rm data}}\left[\ell(f_\theta(x),y)\right],
-$$
+```
 
 
 but we only observe the empirical approximation.
@@ -64,28 +64,28 @@ Generalization is the gap between empirical risk and population risk.
 Assume regression noise is Gaussian:
 
 
-$$
+```math
 y=f_\theta(x)+\epsilon,\qquad \epsilon\sim\mathcal N(0,\sigma^2).
-$$
+```
 
 
 Then
 
 
-$$
+```math
 p(y|x,\theta)=\frac{1}{\sqrt{2\pi\sigma^2}}
 \exp\left[-\frac{(y-f_\theta(x))^2}{2\sigma^2}\right].
-$$
+```
 
 
 Negative log-likelihood:
 
 
-$$
+```math
 -\log p(y|x,\theta)
 =
 \frac{(y-f_\theta(x))^2}{2\sigma^2}+C.
-$$
+```
 
 
 Therefore minimizing Gaussian NLL is equivalent to minimizing MSE.
@@ -94,9 +94,9 @@ Therefore minimizing Gaussian NLL is equivalent to minimizing MSE.
 MAE corresponds to a Laplace observation model:
 
 
-$$
+```math
 p(y|x,\theta)\propto \exp\left(-\frac{|y-f_\theta(x)|}{b}\right).
-$$
+```
 
 
 This makes MAE more robust to outliers.
@@ -108,27 +108,27 @@ This makes MAE more robust to outliers.
 For multiclass classification,
 
 
-$$
+```math
 p_\theta(y=k|x)=\frac{e^{z_k}}{\sum_j e^{z_j}}.
-$$
+```
 
 
 For one-hot target $y$,
 
 
-$$
+```math
 \mathcal L_{\rm CE}
 =
 -\sum_k y_k\log p_\theta(y=k|x).
-$$
+```
 
 
 Since only the correct class has $y_k=1$,
 
 
-$$
+```math
 \mathcal L_{\rm CE}=-\log p_\theta(y_{\rm true}|x).
-$$
+```
 
 
 So cross-entropy is simply categorical negative log-likelihood.
@@ -140,7 +140,7 @@ So cross-entropy is simply categorical negative log-likelihood.
 For squared error,
 
 
-$$
+```math
 \mathbb E[(y-\hat f(x))^2]
 =
 \sigma^2
@@ -148,7 +148,7 @@ $$
 \left(\mathbb E[\hat f(x)]-f(x)\right)^2
 +
 \mathbb E\left[(\hat f(x)-\mathbb E[\hat f(x)])^2\right].
-$$
+```
 
 
 Terms:
@@ -165,17 +165,17 @@ High-capacity models generally reduce bias but can increase variance.
 Objective:
 
 
-$$
+```math
 \mathcal L(\theta)+\lambda\|\theta\|_2^2.
-$$
+```
 
 
 A Gaussian prior
 
 
-$$
+```math
 p(\theta)\propto \exp\left(-\frac{\|\theta\|_2^2}{2\sigma_\theta^2}\right)
-$$
+```
 
 
 makes MAP estimation equivalent to L2-regularized optimization.
@@ -189,18 +189,18 @@ Similarly, L1 regularization corresponds to a Laplace prior and encourages spars
 #### SGD
 
 
-$$
+```math
 \theta_{t+1}=\theta_t-\eta g_t.
-$$
+```
 
 
 #### Momentum
 
 
-$$
+```math
 v_t=\beta v_{t-1}+g_t,\qquad
 \theta_{t+1}=\theta_t-\eta v_t.
-$$
+```
 
 
 Momentum smooths noisy gradients and accelerates progress along persistent directions.
@@ -208,46 +208,46 @@ Momentum smooths noisy gradients and accelerates progress along persistent direc
 #### Adam
 
 
-$$
+```math
 m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,
-$$
+```
 
 
-$$
+```math
 v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2.
-$$
+```
 
 
 Bias-correct:
 
 
-$$
+```math
 \hat m_t=\frac{m_t}{1-\beta_1^t},\qquad
 \hat v_t=\frac{v_t}{1-\beta_2^t}.
-$$
+```
 
 
 Update:
 
 
-$$
+```math
 \theta_{t+1}
 =
 \theta_t-\eta\frac{\hat m_t}{\sqrt{\hat v_t}+\epsilon}.
-$$
+```
 
 
 #### AdamW
 AdamW decouples weight decay from the adaptive gradient:
 
 
-$$
+```math
 \theta_{t+1}
 =
 (1-\eta\lambda)\theta_t
 -
 \eta\frac{\hat m_t}{\sqrt{\hat v_t}+\epsilon}.
-$$
+```
 
 
 This is not exactly the same as adding an L2 penalty inside Adam because Adam rescales gradients coordinate-wise.
@@ -259,9 +259,9 @@ This is not exactly the same as adding an L2 penalty inside Adam because Adam re
 A model is calibrated if
 
 
-$$
+```math
 P(Y=\hat Y\mid \hat p=0.8)\approx0.8.
-$$
+```
 
 
 Accuracy and calibration are different properties. A highly accurate model can still be overconfident.
@@ -304,9 +304,9 @@ For example, suppose $y$ is a continuous target and you use MSE. You are implici
 For independent samples, random splitting can be reasonable. For grouped data, split by group:
 
 
-$$
+```math
 \text{subject}_i \in \{\text{train},\text{val},\text{test}\},
-$$
+```
 
 
 not individual scans from the same subject. For temporal forecasting, random splitting can leak future information; time-based splitting is safer.
@@ -314,7 +314,7 @@ not individual scans from the same subject. For temporal forecasting, random spl
 A useful mental model is:
 
 
-$$
+```math
 \text{training pipeline}
 =
 \text{split}
@@ -326,7 +326,7 @@ $$
 \text{select on val}
 \rightarrow
 \text{report once on test}.
-$$
+```
 
 
 ### Precision, recall, ROC and PR curves
@@ -334,21 +334,21 @@ $$
 For binary classification,
 
 
-$$
+```math
 \mathrm{Precision}=\frac{TP}{TP+FP},
 \qquad
 \mathrm{Recall}=\frac{TP}{TP+FN}.
-$$
+```
 
 
 F1 is the harmonic mean:
 
 
-$$
+```math
 F1
 =
 2\frac{PR}{P+R}.
-$$
+```
 
 
 ROC varies the decision threshold and plots TPR against FPR. PR curves are often more informative for highly imbalanced positive classes because they expose the precision cost of retrieving more positives.
@@ -360,17 +360,17 @@ Two models can rank examples equally well but assign very different confidence.
 Suppose model A outputs
 
 
-$$
+```math
 (0.51,0.52,0.53)
-$$
+```
 
 
 for three correctly ranked positives, while model B outputs
 
 
-$$
+```math
 (0.8,0.9,0.99).
-$$
+```
 
 
 Ranking metrics may be similar, but calibration differs. This matters whenever confidence drives a downstream decision.
@@ -394,9 +394,9 @@ The general idea is not “make weights small.” It is **restrict the set of fu
 The mini-batch gradient
 
 
-$$
+```math
 g_B=\frac1B\sum_{i=1}^B\nabla_\theta \ell_i
-$$
+```
 
 
 has lower variance as $B$ increases. Large batches can improve hardware efficiency but reduce gradient noise. This changes optimization dynamics, which is why batch size and learning rate are often tuned together.
@@ -411,13 +411,13 @@ Suppose a regression model predicts a physical quantity with occasional severe o
 - Heteroscedastic Gaussian NLL can model input-dependent uncertainty:
 
 
-$$
+```math
 \mathcal L
 =
 \frac{(y-\mu_\theta(x))^2}{2\sigma_\theta^2(x)}
 +
 \frac12\log \sigma_\theta^2(x).
-$$
+```
 
 
 The second term prevents the model from trivially inflating uncertainty.

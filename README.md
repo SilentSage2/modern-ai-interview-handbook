@@ -103,7 +103,7 @@ The chapter README is intended to function like a compact textbook chapter, not 
 A good study loop is:
 
 
-$$
+```math
 \text{read}
 \rightarrow
 \text{derive}
@@ -113,9 +113,7 @@ $$
 \text{explain aloud}
 \rightarrow
 \text{answer follow-up questions}.
-$$
-
-
+```
 
 
 ## Markdown math convention

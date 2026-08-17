@@ -35,36 +35,36 @@ Diffusion is already a strength, so this chapter is organized as a concise but r
 DDPM defines
 
 
-$$
+```math
 q(x_t|x_{t-1})
 =
 \mathcal N(\sqrt{1-\beta_t}x_{t-1},\beta_t I).
-$$
+```
 
 
 Let
 
 
-$$
+```math
 \alpha_t=1-\beta_t,\qquad
 \bar\alpha_t=\prod_{s=1}^t\alpha_s.
-$$
+```
 
 
 Then the closed form is
 
 
-$$
+```math
 q(x_t|x_0)
 =
 \mathcal N(\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)I),
-$$
+```
 
 
 so
 
 
-$$
+```math
 x_t
 =
 \sqrt{\bar\alpha_t}x_0
@@ -72,7 +72,7 @@ x_t
 \sqrt{1-\bar\alpha_t}\epsilon,
 \quad
 \epsilon\sim\mathcal N(0,I).
-$$
+```
 
 
 This lets us sample arbitrary noise levels without simulating all previous steps.
@@ -84,32 +84,32 @@ This lets us sample arbitrary noise levels without simulating all previous steps
 Learn
 
 
-$$
+```math
 p_\theta(x_{t-1}|x_t)
 =
 \mathcal N(\mu_\theta(x_t,t),\Sigma_t).
-$$
+```
 
 
 A common parameterization predicts the forward noise
 
 
-$$
+```math
 \epsilon_\theta(x_t,t).
-$$
+```
 
 
 The simplified training objective is
 
 
-$$
+```math
 \mathcal L_{\rm simple}
 =
 \mathbb E_{x_0,t,\epsilon}
 \left[
 \|\epsilon-\epsilon_\theta(x_t,t)\|_2^2
 \right].
-$$
+```
 
 
 ---
@@ -119,11 +119,11 @@ $$
 For Gaussian corruption,
 
 
-$$
+```math
 \nabla_{x_t}\log q(x_t|x_0)
 =
 -\frac{\epsilon}{\sqrt{1-\bar\alpha_t}}.
-$$
+```
 
 
 Therefore predicting $\epsilon$ is equivalent, up to a scale factor, to estimating the score.
@@ -145,13 +145,13 @@ Train conditionally and with condition dropout.
 At inference,
 
 
-$$
+```math
 \epsilon_{\rm guided}
 =
 \epsilon_{\rm uncond}
 +
 w(\epsilon_{\rm cond}-\epsilon_{\rm uncond}).
-$$
+```
 
 
 Higher $w$ strengthens conditional fidelity but can reduce diversity and cause artifacts.
@@ -163,20 +163,20 @@ Higher $w$ strengthens conditional fidelity but can reduce diversity and cause a
 Forward SDE:
 
 
-$$
+```math
 dx=f(x,t)dt+g(t)dW_t.
-$$
+```
 
 
 Reverse-time SDE:
 
 
-$$
+```math
 dx=
 \left[f(x,t)-g(t)^2\nabla_x\log p_t(x)\right]dt
 +
 g(t)d\bar W_t.
-$$
+```
 
 
 Once the score is known, reverse-time simulation generates samples.
@@ -188,12 +188,12 @@ Once the score is known, reverse-time simulation generates samples.
 Associated deterministic ODE:
 
 
-$$
+```math
 dx=
 \left[
 f(x,t)-\frac12g(t)^2\nabla_x\log p_t(x)
 \right]dt.
-$$
+```
 
 
 It shares the same marginal distributions as the SDE.
@@ -205,17 +205,17 @@ It shares the same marginal distributions as the SDE.
 Instead of applying diffusion in pixel space:
 
 
-$$
+```math
 x\overset{E}{\rightarrow} z,
-$$
+```
 
 
 run diffusion in compressed latent $z$, then decode:
 
 
-$$
+```math
 z_0\overset{D}{\rightarrow}\hat x.
-$$
+```
 
 
 This reduces spatial dimensionality and computational cost.
@@ -238,31 +238,31 @@ The important distinction:
 From
 
 
-$$
+```math
 x_t
 =
 \alpha_t x_0+\sigma_t\epsilon,
-$$
+```
 
 
 if the network predicts $\epsilon$,
 
 
-$$
+```math
 \hat x_0
 =
 \frac{x_t-\sigma_t\hat\epsilon}{\alpha_t}.
-$$
+```
 
 
 If it predicts $x_0$, recover noise:
 
 
-$$
+```math
 \hat\epsilon
 =
 \frac{x_t-\alpha_t\hat x_0}{\sigma_t}.
-$$
+```
 
 
 Different parameterizations emphasize different signal-to-noise regimes and numerical conditioning.
@@ -274,11 +274,11 @@ At each noise level, the model learns how noisy samples should move toward regio
 This is a useful intuition for score models:
 
 
-$$
+```math
 s_\theta(x_t,t)
 \approx
 \nabla_{x_t}\log p_t(x_t).
-$$
+```
 
 
 ### Guidance as score modification
@@ -286,13 +286,13 @@ $$
 Classifier-free guidance combines conditional and unconditional predictions:
 
 
-$$
+```math
 s_{\rm guided}
 =
 s_{\rm uncond}
 +
 w(s_{\rm cond}-s_{\rm uncond}).
-$$
+```
 
 
 The difference term points toward features that are more compatible with the condition.
@@ -302,11 +302,11 @@ The difference term points toward features that are more compatible with the con
 Compression reduces cost:
 
 
-$$
+```math
 H\times W\times C
 \rightarrow
 h\times w\times c,\qquad hw\ll HW.
-$$
+```
 
 
 But the autoencoder becomes part of the generative model. Information lost by the encoder cannot be recovered by diffusion.

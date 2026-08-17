@@ -36,7 +36,7 @@ Modern AI interviews increasingly test whether candidates understand where GPU m
 Rough GPU memory:
 
 
-$$
+```math
 M
 =
 M_{\rm params}
@@ -48,15 +48,15 @@ M_{\rm opt}
 M_{\rm activations}
 +
 M_{\rm temp}.
-$$
+```
 
 
 For $N$ parameters in FP16:
 
 
-$$
+```math
 M_{\rm params}\approx2N\text{ bytes}.
-$$
+```
 
 
 Adam may additionally keep FP32 master weights and two FP32 moments, so optimizer-related memory can dominate.
@@ -68,9 +68,9 @@ Adam may additionally keep FP32 master weights and two FP32 moments, so optimize
 For layer activations
 
 
-$$
+```math
 A_l\in\mathbb R^{B\times T\times d_l},
-$$
+```
 
 
 memory scales approximately with batch $B$, sequence length $T$, and hidden dimension.
@@ -95,11 +95,11 @@ store selected checkpoints and recompute missing activations during backward.
 Tradeoff:
 
 
-$$
+```math
 \text{memory}\downarrow,
 \qquad
 \text{compute}\uparrow.
-$$
+```
 
 
 ---
@@ -111,9 +111,9 @@ Each GPU holds a model replica.
 Split batch:
 
 
-$$
+```math
 B=B_1+\cdots+B_n.
-$$
+```
 
 
 Each device computes local gradient $g_i$.
@@ -121,11 +121,11 @@ Each device computes local gradient $g_i$.
 Aggregate:
 
 
-$$
+```math
 g
 =
 \frac1n\sum_i g_i.
-$$
+```
 
 
 Then all replicas update identically.
@@ -142,9 +142,9 @@ Split a large matrix operation across GPUs.
 For
 
 
-$$
+```math
 Y=XW,
-$$
+```
 
 
 partition $W$ by columns or rows.
@@ -162,10 +162,10 @@ communication inside layers.
 Split layers across stages:
 
 
-$$
+```math
 \text{GPU1}:1\!:\!L_1,\quad
 \text{GPU2}:L_1\!+\!1\!:\!L_2,\ldots
-$$
+```
 
 
 Microbatches flow through pipeline.
@@ -185,9 +185,9 @@ Instead of every GPU storing all model states, shard:
 Conceptual memory per GPU can approach
 
 
-$$
+```math
 O\left(\frac{N}{n_{\rm GPU}}\right)
-$$
+```
 
 
 for sharded components.
@@ -200,12 +200,12 @@ extra communication and orchestration complexity.
 ### 8. Arithmetic Intensity
 
 
-$$
+```math
 \text{Arithmetic intensity}
 =
 \frac{\text{FLOPs}}
 {\text{bytes moved}}.
-$$
+```
 
 
 Low intensity:
@@ -268,9 +268,9 @@ A simplified mixed-precision setup may store:
 Already:
 
 
-$$
+```math
 16N\text{ bytes}
-$$
+```
 
 
 before activation memory and temporary buffers.
@@ -278,10 +278,10 @@ before activation memory and temporary buffers.
 For $N=7$ billion:
 
 
-$$
+```math
 16\times7\times10^9
 \approx112\text{ GB}.
-$$
+```
 
 
 This rough calculation immediately explains why large-model training needs sharding/parallelism.
@@ -295,9 +295,9 @@ Exact memory varies by framework and optimizer implementation, but the accountin
 Transformer hidden activations scale roughly with:
 
 
-$$
+```math
 B\times T\times d\times L.
-$$
+```
 
 
 Attention may add $T^2$-related intermediates depending on kernel implementation.
@@ -315,9 +315,9 @@ Each GPU computes local gradient $g_i$.
 All-reduce conceptually produces:
 
 
-$$
+```math
 g=\sum_i g_i
-$$
+```
 
 
 and distributes the result to all workers.
@@ -333,19 +333,19 @@ Compute/communication overlap is important for efficient DDP.
 Linear layer:
 
 
-$$
+```math
 Y=XW,
 \qquad
 W=[W_1,W_2].
-$$
+```
 
 
 Column partition:
 
 
-$$
+```math
 Y_1=XW_1,\qquad Y_2=XW_2.
-$$
+```
 
 
 Each GPU computes part of output features. Later operations may require gathering or communicating these partitions.
@@ -393,14 +393,14 @@ The deeper the sharding, the lower per-device model-state memory and the greater
 Peak performance is bounded by:
 
 
-$$
+```math
 \mathrm{Performance}
 \le
 \min(
 \mathrm{PeakFLOPs},
 \mathrm{Bandwidth}\times\mathrm{ArithmeticIntensity}
 ).
-$$
+```
 
 
 If arithmetic intensity is low, adding more theoretical FLOPs does not help: memory bandwidth limits the workload.
@@ -418,17 +418,17 @@ This equation is a powerful way to reason about:
 Batch 1 linear layer resembles:
 
 
-$$
+```math
 [1,d]\times[d,k].
-$$
+```
 
 
 Large batch:
 
 
-$$
+```math
 [B,d]\times[d,k].
-$$
+```
 
 
 Larger matrix multiplication improves hardware occupancy/data reuse and amortizes launch overhead.
@@ -494,9 +494,9 @@ FSDP/ZeRO.
 Large training systems often combine multiple dimensions:
 
 
-$$
+```math
 \text{DP}\times\text{TP}\times\text{PP}.
-$$
+```
 
 
 This is called multidimensional parallelism.
@@ -508,7 +508,7 @@ This is called multidimensional parallelism.
 Distributed speedup is limited by:
 
 
-$$
+```math
 T_{\rm step}
 \approx
 T_{\rm compute}
@@ -516,7 +516,7 @@ T_{\rm compute}
 T_{\rm communication}
 -
 T_{\rm overlap}.
-$$
+```
 
 
 Adding GPUs helps only if added compute parallelism outweighs communication/synchronization.
@@ -617,19 +617,19 @@ This is the same principle behind AI quantization benchmarks.
 If one GPU throughput is $P_1$, $n$-GPU throughput $P_n$:
 
 
-$$
+```math
 \eta_n
 =
 \frac{P_n}{nP_1}.
-$$
+```
 
 
 Perfect scaling:
 
 
-$$
+```math
 \eta_n=1.
-$$
+```
 
 
 Real scaling drops due to:
@@ -685,29 +685,29 @@ Explain every change in terms of:
 ### Throughput scaling
 
 
-$$
+```math
 S_n
 =
 \frac{P_n}{P_1}.
-$$
+```
 
 
 ### Parallel efficiency
 
 
-$$
+```math
 E_n
 =
 \frac{S_n}{n}.
-$$
+```
 
 
 If 4 GPUs produce 3.2× throughput:
 
 
-$$
+```math
 E_4=\frac{3.2}{4}=0.8.
-$$
+```
 
 
 80% parallel efficiency is more informative than simply reporting “3.2× faster.”
@@ -766,25 +766,25 @@ They attack different memory terms.
 Optimizer sharding:
 
 
-$$
+```math
 M_{\rm optimizer}\downarrow.
-$$
+```
 
 
 Checkpointing:
 
 
-$$
+```math
 M_{\rm activations}\downarrow.
-$$
+```
 
 
 Quantization:
 
 
-$$
+```math
 M_{\rm weights}\downarrow
-$$
+```
 
 
 (mainly inference or frozen-base training, depending on method).

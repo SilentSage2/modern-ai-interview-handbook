@@ -36,17 +36,17 @@ Agent roles require more than prompting: retrieval, tool use, memory, planning, 
 Given query $q$, retriever finds documents:
 
 
-$$
+```math
 D_k(q)=\{d_1,\ldots,d_k\}.
-$$
+```
 
 
 Generator produces:
 
 
-$$
+```math
 p(y|q,d_1,\ldots,d_k).
-$$
+```
 
 
 RAG separates:
@@ -60,19 +60,19 @@ RAG separates:
 Embed query and document:
 
 
-$$
+```math
 z_q=f_q(q),
 \qquad
 z_d=f_d(d).
-$$
+```
 
 
 Similarity:
 
 
-$$
+```math
 s(q,d)=z_q^\top z_d
-$$
+```
 
 
 or cosine similarity.
@@ -80,11 +80,11 @@ or cosine similarity.
 Retrieve top-$k$:
 
 
-$$
+```math
 D_k(q)
 =
 \mathrm{TopK}_d\,s(q,d).
-$$
+```
 
 
 ---
@@ -94,7 +94,7 @@ $$
 For positive document $d^+$:
 
 
-$$
+```math
 \mathcal L
 =
 -\log
@@ -105,7 +105,7 @@ e^{s(q,d^+)/\tau}
 +
 \sum_j e^{s(q,d_j^-)/\tau}
 }.
-$$
+```
 
 
 This is the same broad contrastive-learning principle used in CLIP.
@@ -133,7 +133,7 @@ This is an engineering hyperparameter, not a cosmetic preprocessing choice.
 Two-stage retrieval:
 
 
-$$
+```math
 \text{fast retriever}
 \rightarrow
 \text{top-}K
@@ -141,7 +141,7 @@ $$
 \text{expensive reranker}
 \rightarrow
 \text{top-}k.
-$$
+```
 
 
 Retriever maximizes recall; reranker improves precision.
@@ -153,17 +153,17 @@ Retriever maximizes recall; reranker improves precision.
 Model receives a tool schema:
 
 
-$$
+```math
 T_i=(name_i,\text{arguments}_i,\text{description}_i).
-$$
+```
 
 
 Instead of free-form text, it can emit structured action
 
 
-$$
+```math
 a_t=(T_i,\text{args}).
-$$
+```
 
 
 Runtime executes action and returns observation $o_{t+1}$.
@@ -178,7 +178,7 @@ the LLM chooses the action; the application/runtime performs it.
 A useful abstraction:
 
 
-$$
+```math
 s_t
 \overset{\pi_{\rm LLM}}{\longrightarrow}
 a_t
@@ -186,7 +186,7 @@ a_t
 o_{t+1}
 \rightarrow
 s_{t+1}.
-$$
+```
 
 
 State may include:
@@ -207,7 +207,7 @@ This makes agent systems conceptually close to sequential decision processes.
 Alternates reasoning and external interaction:
 
 
-$$
+```math
 \text{reason}
 \rightarrow
 \text{act}
@@ -215,7 +215,7 @@ $$
 \text{observe}
 \rightarrow
 \text{reason}.
-$$
+```
 
 
 Why useful:
@@ -228,11 +228,11 @@ the model can update its beliefs using external evidence rather than relying ent
 Explicit decomposition:
 
 
-$$
+```math
 G
 \rightarrow
 (g_1,g_2,\ldots,g_n).
-$$
+```
 
 
 But planning adds risks:
@@ -294,7 +294,7 @@ Permission violations, unsafe actions, approval bypasses.
 Repository coding agent loop:
 
 
-$$
+```math
 \text{issue}
 \rightarrow
 \text{search/read code}
@@ -306,7 +306,7 @@ $$
 \text{inspect failures}
 \rightarrow
 \text{iterate}.
-$$
+```
 
 
 The hard parts are:
@@ -328,30 +328,30 @@ The hard parts are:
 5. store embedding + metadata.
 
 
-$$
+```math
 d_i
 \rightarrow
 z_i=f(d_i).
-$$
+```
 
 
 ### Online query
 
 
-$$
+```math
 q\rightarrow z_q=f(q).
-$$
+```
 
 
 Retrieve:
 
 
-$$
+```math
 i_1,\ldots,i_k
 =
 \mathrm{TopK}
 (z_q^\top z_i).
-$$
+```
 
 
 Optionally rerank and place selected text into the model context.
@@ -369,17 +369,17 @@ If relevant set is $R_q$ and retrieved top-$k$ set is $A_k$:
 Recall@k:
 
 
-$$
+```math
 \frac{|A_k\cap R_q|}{|R_q|}.
-$$
+```
 
 
 Precision@k:
 
 
-$$
+```math
 \frac{|A_k\cap R_q|}{k}.
-$$
+```
 
 
 For RAG, recall is often critical. If supporting evidence is not retrieved, the generator cannot use it.
@@ -395,13 +395,13 @@ Sparse lexical methods capture exact words, identifiers, rare technical strings.
 Hybrid score:
 
 
-$$
+```math
 s(d,q)
 =
 \lambda s_{\rm dense}
 +
 (1-\lambda)s_{\rm sparse}.
-$$
+```
 
 
 This is often valuable for:
@@ -467,7 +467,7 @@ Memory is an external mechanism deciding what prior information should be restor
 Long-term memory pipeline:
 
 
-$$
+```math
 \text{event}
 \rightarrow
 \text{store}
@@ -475,7 +475,7 @@ $$
 \text{retrieve later}
 \rightarrow
 \text{inject into context}.
-$$
+```
 
 
 This is architecturally similar to RAG but personalized/task-state oriented.
@@ -690,9 +690,9 @@ Suppose chunk length $L$, overlap $O$.
 Stride:
 
 
-$$
+```math
 S=L-O.
-$$
+```
 
 
 Overlap reduces risk that a concept split at boundary loses context, but increases:
@@ -711,9 +711,9 @@ User query may be underspecified.
 Retriever query can be transformed:
 
 
-$$
+```math
 q\rightarrow \tilde q.
-$$
+```
 
 
 Examples:
@@ -724,11 +724,11 @@ Examples:
 Multi-query retrieval:
 
 
-$$
+```math
 D=
 \bigcup_{j=1}^m
 \mathrm{Retrieve}(\tilde q_j).
-$$
+```
 
 
 This can improve recall but increases cost and duplicate handling.

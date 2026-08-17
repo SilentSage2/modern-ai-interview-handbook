@@ -1,22 +1,39 @@
-# Math formatting for GitHub Markdown
+# Math Style for GitHub Markdown
 
-Use GitHub-compatible math delimiters throughout this repository.
+Use GitHub's native MathJax-compatible syntax.
 
-## Inline math
+## Display equations — required style
 
-```markdown
-$O(N^2)$
-```
+Use fenced `math` blocks:
 
-## Display math
-
-```markdown
-$$
-\frac{\partial \mathcal L}{\partial h_l}
+````markdown
+```math
+q(x_t|x_{t-1})
 =
-\frac{\partial \mathcal L}{\partial h_{l+1}}
-\frac{\partial h_{l+1}}{\partial h_l}
-$$
+\mathcal N(\sqrt{1-\beta_t}x_{t-1},\beta_t I).
+```
+````
+
+This is preferred throughout this repository because it avoids Markdown parsing conflicts with characters such as `|`, `_`, `<`, and `>`.
+
+## Inline equations
+
+For simple inline math, `$...$` is acceptable:
+
+```markdown
+The attention complexity is $O(T^2)$.
 ```
 
-Avoid `\(...\)` and `\[...\]` in GitHub README files because GitHub Markdown may render them as escaped literal brackets rather than math.
+If an inline expression contains Markdown-sensitive syntax, use GitHub's backtick math delimiter:
+
+```markdown
+$`p(y|x)`$
+```
+
+## Do not use
+
+- `\[ ... \]`
+- `\( ... \)`
+- multiline `$$ ... $$`
+
+The repository uses fenced `math` blocks for all display equations.

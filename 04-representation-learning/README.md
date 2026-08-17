@@ -30,17 +30,17 @@ Foundation models depend on learning transferable representations before downstr
 ### 1. Autoencoder
 
 
-$$
+```math
 z=E_\phi(x),\qquad \hat x=D_\theta(z).
-$$
+```
 
 
 Train with
 
 
-$$
+```math
 \mathcal L=\|x-\hat x\|^2.
-$$
+```
 
 
 A bottleneck encourages $z$ to retain useful structure, but reconstruction alone does not guarantee semantic representations.
@@ -52,19 +52,19 @@ A bottleneck encourages $z$ to retain useful structure, but reconstruction alone
 Latent-variable model:
 
 
-$$
+```math
 p_\theta(x,z)=p(z)p_\theta(x|z).
-$$
+```
 
 
 We want
 
 
-$$
+```math
 \log p_\theta(x)
 =
 \log\int p_\theta(x,z)\,dz,
-$$
+```
 
 
 which is often intractable.
@@ -72,33 +72,33 @@ which is often intractable.
 Introduce approximate posterior $q_\phi(z|x)$:
 
 
-$$
+```math
 \log p_\theta(x)
 =
 \mathcal L_{\rm ELBO}
 +
 D_{\rm KL}(q_\phi(z|x)\|p_\theta(z|x)).
-$$
+```
 
 
 Therefore
 
 
-$$
+```math
 \log p_\theta(x)\ge \mathcal L_{\rm ELBO},
-$$
+```
 
 
 with
 
 
-$$
+```math
 \mathcal L_{\rm ELBO}
 =
 \mathbb E_{q_\phi(z|x)}[\log p_\theta(x|z)]
 -
 D_{\rm KL}(q_\phi(z|x)\|p(z)).
-$$
+```
 
 
 Interpretation:
@@ -112,18 +112,18 @@ Interpretation:
 For Gaussian encoder
 
 
-$$
+```math
 q_\phi(z|x)=\mathcal N(\mu_\phi(x),\sigma_\phi^2(x)),
-$$
+```
 
 
 sample via
 
 
-$$
+```math
 \epsilon\sim\mathcal N(0,I),\qquad
 z=\mu+\sigma\odot\epsilon.
-$$
+```
 
 
 Randomness moves outside the parameterized path, enabling backpropagation.
@@ -135,13 +135,13 @@ Randomness moves outside the parameterized path, enabling backpropagation.
 For anchor $i$, positive $j$:
 
 
-$$
+```math
 \mathcal L_i
 =
 -\log
 \frac{\exp(\mathrm{sim}(z_i,z_j)/\tau)}
 {\sum_k \exp(\mathrm{sim}(z_i,z_k)/\tau)}.
-$$
+```
 
 
 The loss:
@@ -169,11 +169,11 @@ A representation $z=f(x)$ is useful when it preserves information relevant to ma
 This creates tension:
 
 
-$$
+```math
 \text{invariance}
 \quad \text{vs} \quad
 \text{information preservation}.
-$$
+```
 
 
 If augmentation says two views should map closely, the model is encouraged to become invariant to whatever differs between those views. Therefore augmentation design implicitly defines the desired invariances.
@@ -185,9 +185,9 @@ For one anchor, choosing the positive among $B$ candidates can be viewed as a $B
 Logit for candidate $j$:
 
 
-$$
+```math
 \ell_j=\frac{z_i^\top z_j}{\tau}.
-$$
+```
 
 
 Cross entropy over these logits yields InfoNCE.
@@ -199,12 +199,12 @@ This makes contrastive learning easy to connect to ordinary supervised classific
 Small $\tau$ sharpens similarity differences:
 
 
-$$
+```math
 p_j
 =
 \frac{\exp(s_j/\tau)}
 {\sum_k\exp(s_k/\tau)}.
-$$
+```
 
 
 If $\tau$ is too small, optimization may become dominated by very hard negatives. If too large, similarities become insufficiently discriminative.
@@ -214,19 +214,19 @@ If $\tau$ is too small, optimization may become dominated by very hard negatives
 ELBO:
 
 
-$$
+```math
 \mathbb E_q[\log p_\theta(x|z)]
 -
 D_{\rm KL}(q_\phi(z|x)\|p(z)).
-$$
+```
 
 
 If the decoder is extremely powerful, it may model $x$ while ignoring $z$. Then
 
 
-$$
+```math
 q_\phi(z|x)\approx p(z)
-$$
+```
 
 
 and the KL becomes near zero. This is posterior collapse.

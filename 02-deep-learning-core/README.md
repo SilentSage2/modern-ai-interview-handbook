@@ -33,20 +33,20 @@ This chapter is the common language behind CNNs, Transformers, diffusion models,
 For a composition
 
 
-$$
+```math
 y=f_L(f_{L-1}(\cdots f_1(x))),
-$$
+```
 
 
 the chain rule gives
 
 
-$$
+```math
 \frac{\partial \mathcal L}{\partial h_l}
 =
 \frac{\partial \mathcal L}{\partial h_{l+1}}
 \frac{\partial h_{l+1}}{\partial h_l}.
-$$
+```
 
 
 Backpropagation is dynamic programming for repeatedly applying this chain rule while reusing intermediate derivatives.
@@ -58,11 +58,11 @@ Backpropagation is dynamic programming for repeatedly applying this chain rule w
 For a deep linearized network,
 
 
-$$
+```math
 \frac{\partial h_L}{\partial h_0}
 =
 \prod_{l=1}^L J_l.
-$$
+```
 
 
 If typical singular values of $J_l$ are below 1, the product shrinks exponentially; above 1, it can explode.
@@ -81,19 +81,19 @@ Solutions:
 A residual block:
 
 
-$$
+```math
 y=x+F(x).
-$$
+```
 
 
 Derivative:
 
 
-$$
+```math
 \frac{\partial y}{\partial x}
 =
 I+\frac{\partial F}{\partial x}.
-$$
+```
 
 
 The identity path allows gradient flow even if the residual branch has poor conditioning. It also biases optimization toward learning corrections to an identity mapping.
@@ -105,25 +105,25 @@ The identity path allows gradient flow even if the residual branch has poor cond
 For layer
 
 
-$$
+```math
 y_j=\sum_{i=1}^{n}w_{ji}x_i,
-$$
+```
 
 
 assuming independent zero-mean terms,
 
 
-$$
+```math
 \mathrm{Var}(y_j)\approx n\,\mathrm{Var}(w)\mathrm{Var}(x).
-$$
+```
 
 
 To preserve variance, choose
 
 
-$$
+```math
 \mathrm{Var}(w)\propto \frac1n.
-$$
+```
 
 
 Xavier/Glorot accounts for fan-in and fan-out. He/Kaiming adjusts for ReLU, which zeroes roughly half the activations.
@@ -162,39 +162,39 @@ Typical safeguards:
 Consider a layer
 
 
-$$
+```math
 h_{l+1}=\phi(W_lh_l+b_l).
-$$
+```
 
 
 The Jacobian is
 
 
-$$
+```math
 J_l
 =
 \frac{\partial h_{l+1}}{\partial h_l}
 =
 D_{\phi'(u_l)}W_l.
-$$
+```
 
 
 Across many layers,
 
 
-$$
+```math
 \frac{\partial h_L}{\partial h_0}
 =
 J_{L-1}J_{L-2}\cdots J_0.
-$$
+```
 
 
 The product of many Jacobians explains why singular values matter. If the typical gain is $0.8$, after 50 layers it becomes roughly
 
 
-$$
+```math
 0.8^{50}\approx1.4\times10^{-5}.
-$$
+```
 
 
 This is the basic vanishing-gradient intuition.
@@ -204,19 +204,19 @@ This is the basic vanishing-gradient intuition.
 Residual block:
 
 
-$$
+```math
 h_{l+1}=h_l+F_l(h_l).
-$$
+```
 
 
 If $F_l$ initially learns a small correction, then
 
 
-$$
+```math
 J_l
 =
 I+\frac{\partial F_l}{\partial h_l},
-$$
+```
 
 
 so signal and gradients do not need to pass exclusively through a long product of arbitrary transforms.
@@ -228,17 +228,17 @@ This is why the statement “skip connections preserve detail” is incomplete. 
 #### Sigmoid
 
 
-$$
+```math
 \sigma(x)=\frac1{1+e^{-x}}.
-$$
+```
 
 
 Derivative:
 
 
-$$
+```math
 \sigma'(x)=\sigma(x)(1-\sigma(x)).
-$$
+```
 
 
 It saturates for large $|x|$, creating small gradients.
@@ -246,9 +246,9 @@ It saturates for large $|x|$, creating small gradients.
 #### ReLU
 
 
-$$
+```math
 \mathrm{ReLU}(x)=\max(0,x).
-$$
+```
 
 
 Cheap and non-saturating for positive inputs, but units can die if they remain negative.
@@ -257,9 +257,9 @@ Cheap and non-saturating for positive inputs, but units can die if they remain n
 A smooth gating-like activation widely used in Transformers:
 
 
-$$
+```math
 \mathrm{GELU}(x)=x\Phi(x).
-$$
+```
 
 
 Interpretation: instead of a hard threshold at zero, it smoothly weights the input by how likely it is to be positive under a standard Gaussian.
@@ -288,11 +288,11 @@ The identity residual path stays clean. This generally improves optimization sta
 Global-norm clipping:
 
 
-$$
+```math
 g\leftarrow
 g\cdot
 \min\left(1,\frac{\tau}{\|g\|_2}\right).
-$$
+```
 
 
 It does not solve bad optimization fundamentally, but prevents rare extreme updates from destabilizing training.

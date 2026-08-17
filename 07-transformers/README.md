@@ -36,9 +36,9 @@ Transformer knowledge is the central bridge connecting LLMs, ViTs, VLMs, multimo
 Let a sequence contain $N$ tokens with hidden dimension $d$:
 
 
-$$
+```math
 X\in\mathbb R^{N\times d}.
-$$
+```
 
 
 A Transformer layer should allow each token to aggregate information from other tokens.
@@ -52,47 +52,47 @@ The central operation is attention.
 Project each token into three spaces:
 
 
-$$
+```math
 Q=XW_Q,\qquad
 K=XW_K,\qquad
 V=XW_V.
-$$
+```
 
 
 Shapes:
 
 
-$$
+```math
 W_Q,W_K\in\mathbb R^{d\times d_k},
 \qquad
 W_V\in\mathbb R^{d\times d_v}.
-$$
+```
 
 
 Thus
 
 
-$$
+```math
 Q,K\in\mathbb R^{N\times d_k},
 \qquad
 V\in\mathbb R^{N\times d_v}.
-$$
+```
 
 
 For token $i$, query $q_i$ is compared against all keys $k_j$:
 
 
-$$
+```math
 s_{ij}=q_i^\top k_j.
-$$
+```
 
 
 This produces
 
 
-$$
+```math
 S=QK^\top\in\mathbb R^{N\times N}.
-$$
+```
 
 
 Interpretation:
@@ -107,34 +107,34 @@ Interpretation:
 Assume elements of $q$ and $k$ are independent with
 
 
-$$
+```math
 \mathbb E[q_l]=\mathbb E[k_l]=0,\qquad
 \mathrm{Var}(q_l)=\mathrm{Var}(k_l)=1.
-$$
+```
 
 
 The dot product is
 
 
-$$
+```math
 q^\top k=\sum_{l=1}^{d_k}q_lk_l.
-$$
+```
 
 
 Each product has roughly unit variance, so
 
 
-$$
+```math
 \mathrm{Var}(q^\top k)\approx d_k.
-$$
+```
 
 
 Therefore its standard deviation grows as
 
 
-$$
+```math
 \sqrt{d_k}.
-$$
+```
 
 
 Large logits push softmax into saturation, causing near one-hot weights and poor gradients.
@@ -142,9 +142,9 @@ Large logits push softmax into saturation, causing near one-hot weights and poor
 Scale:
 
 
-$$
+```math
 \tilde S=\frac{QK^\top}{\sqrt{d_k}}.
-$$
+```
 
 
 Then the logit variance remains approximately $O(1)$.
@@ -156,12 +156,12 @@ Then the logit variance remains approximately $O(1)$.
 Row-wise softmax gives
 
 
-$$
+```math
 A_{ij}
 =
 \frac{\exp(\tilde S_{ij})}
 {\sum_{m=1}^N\exp(\tilde S_{im})}.
-$$
+```
 
 
 Each row sums to 1.
@@ -169,17 +169,17 @@ Each row sums to 1.
 Output:
 
 
-$$
+```math
 Y=AV.
-$$
+```
 
 
 For token $i$:
 
 
-$$
+```math
 y_i=\sum_{j=1}^N A_{ij}v_j.
-$$
+```
 
 
 So attention is a learned, input-dependent weighted average of value vectors.
@@ -193,26 +193,26 @@ Autoregressive language modeling requires token $i$ to use only tokens $j\le i$.
 Define
 
 
-$$
+```math
 M_{ij}
 =
 \begin{cases}
 0,&j\le i\\
 -\infty,&j>i.
 \end{cases}
-$$
+```
 
 
 Then
 
 
-$$
+```math
 A=
 \mathrm{softmax}
 \left(
 \frac{QK^\top}{\sqrt{d_k}}+M
 \right).
-$$
+```
 
 
 Since $e^{-\infty}=0$, future positions receive zero probability.
@@ -224,46 +224,46 @@ Since $e^{-\infty}=0$, future positions receive zero probability.
 A single attention map is restrictive. Use $h$ independent projections:
 
 
-$$
+```math
 Q_i=XW_Q^{(i)},
 \quad
 K_i=XW_K^{(i)},
 \quad
 V_i=XW_V^{(i)}.
-$$
+```
 
 
 Then
 
 
-$$
+```math
 H_i=
 \mathrm{Attention}(Q_i,K_i,V_i).
-$$
+```
 
 
 Concatenate:
 
 
-$$
+```math
 H=\mathrm{Concat}(H_1,\ldots,H_h).
-$$
+```
 
 
 Project:
 
 
-$$
+```math
 Y=HW_O.
-$$
+```
 
 
 If model dimension is $d$, a common design is
 
 
-$$
+```math
 d_k=d_v=\frac dh.
-$$
+```
 
 
 This keeps total attention width approximately fixed while allowing different representation subspaces.
@@ -275,9 +275,9 @@ This keeps total attention width approximately fixed while allowing different re
 The score matrix
 
 
-$$
+```math
 QK^\top
-$$
+```
 
 
 has $N^2$ entries.
@@ -285,17 +285,17 @@ has $N^2$ entries.
 Compute complexity:
 
 
-$$
+```math
 O(N^2d_k).
-$$
+```
 
 
 Memory for attention weights:
 
 
-$$
+```math
 O(N^2).
-$$
+```
 
 
 This is the central bottleneck for very long contexts.
@@ -307,22 +307,22 @@ This is the central bottleneck for very long contexts.
 A simplified pre-norm block:
 
 
-$$
+```math
 H_1=X+\mathrm{MHA}(\mathrm{LN}(X)),
-$$
+```
 
 
-$$
+```math
 H_2=H_1+\mathrm{FFN}(\mathrm{LN}(H_1)).
-$$
+```
 
 
 FFN is token-wise:
 
 
-$$
+```math
 \mathrm{FFN}(x)=W_2\sigma(W_1x+b_1)+b_2.
-$$
+```
 
 
 Attention mixes information **across tokens**.
@@ -338,30 +338,30 @@ This distinction is very useful in interviews.
 For hidden vector $x\in\mathbb R^d$,
 
 
-$$
+```math
 \mu=\frac1d\sum_i x_i,
-$$
+```
 
 
-$$
+```math
 \sigma^2=\frac1d\sum_i(x_i-\mu)^2.
-$$
+```
 
 
 Normalize:
 
 
-$$
+```math
 \hat x_i=\frac{x_i-\mu}{\sqrt{\sigma^2+\epsilon}}.
-$$
+```
 
 
 Affine transform:
 
 
-$$
+```math
 y_i=\gamma_i\hat x_i+\beta_i.
-$$
+```
 
 
 LayerNorm does not depend on other samples in the batch.
@@ -373,16 +373,16 @@ LayerNorm does not depend on other samples in the batch.
 RMSNorm removes mean subtraction:
 
 
-$$
+```math
 \mathrm{RMS}(x)
 =
 \sqrt{\frac1d\sum_i x_i^2+\epsilon},
-$$
+```
 
 
-$$
+```math
 y_i=\gamma_i\frac{x_i}{\mathrm{RMS}(x)}.
-$$
+```
 
 
 It is computationally simpler and widely used in modern LLMs.
@@ -398,22 +398,22 @@ Without positions, reordering tokens reorders outputs but does not tell the mode
 ### Sinusoidal encoding
 
 
-$$
+```math
 PE_{(pos,2i)}
 =
 \sin\left(
 pos/10000^{2i/d}
 \right),
-$$
+```
 
 
-$$
+```math
 PE_{(pos,2i+1)}
 =
 \cos\left(
 pos/10000^{2i/d}
 \right).
-$$
+```
 
 
 ---
@@ -425,36 +425,36 @@ RoPE rotates query/key vector pairs by position-dependent angles.
 For 2D pair:
 
 
-$$
+```math
 R(\theta_m)
 =
 \begin{bmatrix}
 \cos\theta_m&-\sin\theta_m\\
 \sin\theta_m&\cos\theta_m
 \end{bmatrix}.
-$$
+```
 
 
 At positions $m,n$:
 
 
-$$
+```math
 q_m=R(\theta_m)q,
 \qquad
 k_n=R(\theta_n)k.
-$$
+```
 
 
 Their inner product:
 
 
-$$
+```math
 q_m^\top k_n
 =
 q^\top R(\theta_m)^\top R(\theta_n)k
 =
 q^\top R(\theta_n-\theta_m)k.
-$$
+```
 
 
 Therefore the interaction naturally depends on **relative position $n-m$**.
@@ -470,25 +470,25 @@ During autoregressive generation, previous K/V vectors do not change.
 At step $t$, instead of recomputing:
 
 
-$$
+```math
 K_{1:t},V_{1:t},
-$$
+```
 
 
 store
 
 
-$$
+```math
 K_{1:t-1},V_{1:t-1}
-$$
+```
 
 
 and compute only
 
 
-$$
+```math
 k_t,v_t.
-$$
+```
 
 
 Then query $q_t$ attends to the cached history.
@@ -497,11 +497,11 @@ Then query $q_t$ attends to the cached history.
 For $L$ layers, $H_{kv}$ KV heads, head dimension $d_h$, sequence $T$:
 
 
-$$
+```math
 \mathrm{KV\ elements}
 \approx
 2LTH_{kv}d_h.
-$$
+```
 
 
 Multiply by bytes per element and batch size.
@@ -544,9 +544,9 @@ Groups of Q heads share K/V heads.
 Benefit:
 
 
-$$
+```math
 \text{KV cache memory}\downarrow
-$$
+```
 
 
 while retaining more expressiveness than a single shared KV head.
@@ -590,17 +590,17 @@ Pre-norm puts normalization before sublayer and generally improves optimization 
 Suppose:
 
 
-$$
+```math
 X\in\mathbb R^{B\times T\times d_{\rm model}},
-$$
+```
 
 
 with
 
 
-$$
+```math
 B=2,\quad T=128,\quad d_{\rm model}=768,
-$$
+```
 
 
 and $h=12$ heads.
@@ -608,59 +608,59 @@ and $h=12$ heads.
 Then
 
 
-$$
+```math
 d_h=\frac{768}{12}=64.
-$$
+```
 
 
 After linear projections:
 
 
-$$
+```math
 Q,K,V\in\mathbb R^{2\times128\times768}.
-$$
+```
 
 
 Reshape into heads:
 
 
-$$
+```math
 Q,K,V
 \rightarrow
 [2,12,128,64].
-$$
+```
 
 
 Attention scores:
 
 
-$$
+```math
 QK^\top
 \rightarrow
 [2,12,128,128].
-$$
+```
 
 
 After softmax, multiply values:
 
 
-$$
+```math
 [2,12,128,128]
 \times
 [2,12,128,64]
 \rightarrow
 [2,12,128,64].
-$$
+```
 
 
 Merge heads:
 
 
-$$
+```math
 [2,12,128,64]
 \rightarrow
 [2,128,768].
-$$
+```
 
 
 This shape flow should become automatic.
@@ -718,22 +718,22 @@ Important implementation details:
 Convolution uses learned weights that are fixed after training:
 
 
-$$
+```math
 y_i=\sum_{\Delta}w_\Delta x_{i+\Delta}.
-$$
+```
 
 
 Attention weights depend on the current input:
 
 
-$$
+```math
 A_{ij}(X)
 =
 \mathrm{softmax}_j
 \left(
 q_i(X)^\top k_j(X)
 \right).
-$$
+```
 
 
 Therefore two different sequences can induce different connectivity patterns even with identical parameters.
@@ -749,58 +749,58 @@ For one dense attention block with model width $d$:
 Q, K, V projections:
 
 
-$$
+```math
 3d^2.
-$$
+```
 
 
 Output projection:
 
 
-$$
+```math
 d^2.
-$$
+```
 
 
 Attention total:
 
 
-$$
+```math
 4d^2.
-$$
+```
 
 
 If FFN hidden dimension is $d_{\rm ff}=4d$,
 
 
-$$
+```math
 W_1:d\rightarrow4d
 \quad\Rightarrow\quad
 4d^2,
-$$
+```
 
 
-$$
+```math
 W_2:4d\rightarrow d
 \quad\Rightarrow\quad
 4d^2.
-$$
+```
 
 
 FFN total:
 
 
-$$
+```math
 8d^2.
-$$
+```
 
 
 So a classic Transformer block has roughly
 
 
-$$
+```math
 12d^2
-$$
+```
 
 
 large matrix parameters, ignoring bias/norm.
@@ -814,19 +814,19 @@ large matrix parameters, ignoring bias/norm.
 Training sequence:
 
 
-$$
+```math
 [x_1,x_2,\ldots,x_T].
-$$
+```
 
 
 A causal mask allows all next-token losses to be computed in parallel:
 
 
-$$
+```math
 x_1\to x_2,\quad
 x_{1:2}\to x_3,\quad
 \ldots
-$$
+```
 
 
 within one forward pass.
@@ -834,13 +834,13 @@ within one forward pass.
 Inference is different because token $x_{T+1}$ does not exist until it is sampled. Therefore generation remains sequential:
 
 
-$$
+```math
 x_{T+1}
 \rightarrow
 x_{T+2}
 \rightarrow
 x_{T+3}.
-$$
+```
 
 
 This resolves a common confusion:
@@ -862,18 +862,18 @@ Suppose:
 KV elements:
 
 
-$$
+```math
 2 \times L\times H_{kv}\times T\times d_h.
-$$
+```
 
 
 Approximate bytes:
 
 
-$$
+```math
 2(32)(8)(8192)(128)(2)
 \approx 1.07\times10^9\text{ bytes}
-$$
+```
 
 
 or about $1$ GB.
@@ -889,24 +889,24 @@ This example explains why GQA/MQA and paged KV management matter operationally.
 Take one 2D query component:
 
 
-$$
+```math
 q=
 \begin{bmatrix}
 q_1\\q_2
 \end{bmatrix}.
-$$
+```
 
 
 At position $m$:
 
 
-$$
+```math
 q_m=
 \begin{bmatrix}
 \cos m\theta&-\sin m\theta\\
 \sin m\theta&\cos m\theta
 \end{bmatrix}q.
-$$
+```
 
 
 Similarly for $k_n$.
@@ -914,11 +914,11 @@ Similarly for $k_n$.
 Because rotations compose:
 
 
-$$
+```math
 R(m\theta)^\top R(n\theta)
 =
 R((n-m)\theta),
-$$
+```
 
 
 the attention dot product contains relative offset $n-m$.
@@ -932,11 +932,11 @@ In higher dimension, different coordinate pairs rotate at different frequencies 
 Transformer MLP commonly expands width:
 
 
-$$
+```math
 d\rightarrow d_{\rm ff}\rightarrow d,
 \qquad
 d_{\rm ff}>d.
-$$
+```
 
 
 The expansion creates a larger nonlinear feature space.
@@ -944,11 +944,11 @@ The expansion creates a larger nonlinear feature space.
 Modern gated MLP variants use forms such as
 
 
-$$
+```math
 \mathrm{SwiGLU}(x)
 =
 (\mathrm{Swish}(xW_1)\odot xW_2)W_3.
-$$
+```
 
 
 The gate allows multiplicative feature interactions rather than only elementwise activation after one projection.
@@ -973,17 +973,17 @@ Because decode cache scales with $H_{kv}$, while query heads do not need to be c
 Token attends only nearby positions:
 
 
-$$
+```math
 |i-j|\le w.
-$$
+```
 
 
 Complexity becomes closer to
 
 
-$$
+```math
 O(Twd)
-$$
+```
 
 
 instead of $O(T^2d)$, but arbitrary long-range recall is restricted.
@@ -1011,9 +1011,9 @@ It reduces repeated compute but **increases stored inference state**.
 Given
 
 
-$$
+```math
 B=4,\quad T=1024,\quad d=1024,\quad h=16,
-$$
+```
 
 
 answer:
@@ -1027,25 +1027,25 @@ answer:
 Answers:
 
 
-$$
+```math
 d_h=64,
-$$
+```
 
 
 scores:
 
 
-$$
+```math
 [4,16,1024,1024].
-$$
+```
 
 
 Score elements:
 
 
-$$
+```math
 4\times16\times1024^2.
-$$
+```
 
 
 Doubling $T$ approximately quadruples score memory. GQA reduces K/V head count, not the number of Q heads.
@@ -1088,9 +1088,9 @@ gated MLP        │
 The model dimension $d$ stays constant across residual blocks, which is required for the addition:
 
 
-$$
+```math
 x+F(x).
-$$
+```
 
 
 Attention and MLP may internally expand/project but return to $d$.
@@ -1100,9 +1100,9 @@ Attention and MLP may internally expand/project but return to $d$.
 Think of the residual state as a shared communication channel. Each layer reads the current representation and writes a correction:
 
 
-$$
+```math
 x_{l+1}=x_l+\Delta x_l.
-$$
+```
 
 
 This perspective helps explain why many interpretability analyses talk about information being written to or read from a residual stream.
@@ -1116,36 +1116,36 @@ Self-attention uses the same source for Q/K/V.
 Cross-attention uses:
 
 
-$$
+```math
 Q=X_{\rm query}W_Q,
-$$
+```
 
 
-$$
+```math
 K=X_{\rm context}W_K,
 \qquad
 V=X_{\rm context}W_V.
-$$
+```
 
 
 Shapes:
 
 
-$$
+```math
 X_q\in\mathbb R^{B\times T_q\times d},
 \qquad
 X_c\in\mathbb R^{B\times T_c\times d}.
-$$
+```
 
 
 Score matrix:
 
 
-$$
+```math
 QK^\top
 \in
 \mathbb R^{B\times h\times T_q\times T_c}.
-$$
+```
 
 
 This operation is central to:
@@ -1165,9 +1165,9 @@ Therefore we compute the whole triangular dependency graph in one batched matrix
 This differs from RNN training, where hidden state recurrence
 
 
-$$
+```math
 h_t=f(h_{t-1},x_t)
-$$
+```
 
 
 creates a sequential dependency through $t$.
@@ -1180,18 +1180,18 @@ creates a sequential dependency through $t$.
 We need activations for backward. Without memory-efficient kernels, attention intermediates can scale with
 
 
-$$
+```math
 B h T^2.
-$$
+```
 
 
 ### Autoregressive inference
 For each new token, attention weights need not be stored across future steps, but K/V states are cached:
 
 
-$$
+```math
 O(BLT H_{kv}d_h).
-$$
+```
 
 
 So:
@@ -1216,10 +1216,10 @@ backward: recompute f(x), then differentiate
 Tradeoff:
 
 
-$$
+```math
 \text{activation memory}\downarrow,\qquad
 \text{FLOPs}\uparrow.
-$$
+```
 
 
 ---
@@ -1229,9 +1229,9 @@ $$
 Naive:
 
 
-$$
+```math
 \mathrm{softmax}(z_i)=\frac{e^{z_i}}{\sum_j e^{z_j}}
-$$
+```
 
 
 can overflow if $z_i$ is large.
@@ -1239,14 +1239,14 @@ can overflow if $z_i$ is large.
 Subtract max:
 
 
-$$
+```math
 \mathrm{softmax}(z_i)
 =
 \frac{e^{z_i-m}}
 {\sum_j e^{z_j-m}},
 \qquad
 m=\max_j z_j.
-$$
+```
 
 
 This is mathematically identical because the common factor $e^{-m}$ cancels.
@@ -1260,9 +1260,9 @@ Attention implementations rely on this stable form.
 Causal mask encodes **temporal legality**:
 
 
-$$
+```math
 j>i \Rightarrow \text{blocked}.
-$$
+```
 
 
 Padding mask encodes **invalid data positions**:
@@ -1276,9 +1276,9 @@ A batch may need both.
 For variable sequence length, attention score can combine:
 
 
-$$
+```math
 S + M_{\rm causal}+M_{\rm padding}.
-$$
+```
 
 
 ---

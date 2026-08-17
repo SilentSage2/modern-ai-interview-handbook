@@ -36,47 +36,47 @@ RL is the theoretical foundation for PPO/RLHF, agents, world models, and embodie
 An MDP is
 
 
-$$
+```math
 (\mathcal S,\mathcal A,P,R,\gamma).
-$$
+```
 
 
 Transition:
 
 
-$$
+```math
 P(s'|s,a).
-$$
+```
 
 
 Policy:
 
 
-$$
+```math
 \pi(a|s).
-$$
+```
 
 
 Discounted return:
 
 
-$$
+```math
 G_t
 =
 \sum_{k=0}^{\infty}
 \gamma^k r_{t+k}.
-$$
+```
 
 
 Goal:
 
 
-$$
+```math
 \max_\pi
 J(\pi)
 =
 \mathbb E_\pi[G_0].
-$$
+```
 
 
 ---
@@ -86,31 +86,31 @@ $$
 State value:
 
 
-$$
+```math
 V^\pi(s)
 =
 \mathbb E_\pi[G_t|s_t=s].
-$$
+```
 
 
 Action value:
 
 
-$$
+```math
 Q^\pi(s,a)
 =
 \mathbb E_\pi[G_t|s_t=s,a_t=a].
-$$
+```
 
 
 Advantage:
 
 
-$$
+```math
 A^\pi(s,a)
 =
 Q^\pi(s,a)-V^\pi(s).
-$$
+```
 
 
 ---
@@ -120,28 +120,28 @@ $$
 Start with
 
 
-$$
+```math
 G_t=r_t+\gamma G_{t+1}.
-$$
+```
 
 
 Therefore
 
 
-$$
+```math
 V^\pi(s)
 =
 \mathbb E_{a\sim\pi,s'\sim P}
 [
 r(s,a)+\gamma V^\pi(s')
 ].
-$$
+```
 
 
 Similarly:
 
 
-$$
+```math
 Q^\pi(s,a)
 =
 r(s,a)
@@ -151,7 +151,7 @@ r(s,a)
 [
 Q^\pi(s',a')
 ].
-$$
+```
 
 
 ---
@@ -161,7 +161,7 @@ $$
 Optimal action value:
 
 
-$$
+```math
 Q^*(s,a)
 =
 r(s,a)
@@ -171,15 +171,15 @@ r(s,a)
 \left[
 \max_{a'}Q^*(s',a')
 \right].
-$$
+```
 
 
 Optimal policy:
 
 
-$$
+```math
 \pi^*(s)=\arg\max_a Q^*(s,a).
-$$
+```
 
 
 ---
@@ -189,23 +189,23 @@ $$
 TD target:
 
 
-$$
+```math
 y_t
 =
 r_t
 +
 \gamma\max_{a'}Q_{\theta^-}(s_{t+1},a').
-$$
+```
 
 
 Loss:
 
 
-$$
+```math
 \mathcal L
 =
 (Q_\theta(s_t,a_t)-y_t)^2.
-$$
+```
 
 
 DQN adds:
@@ -220,52 +220,52 @@ DQN adds:
 Objective:
 
 
-$$
+```math
 J(\theta)
 =
 \mathbb E_{\tau\sim\pi_\theta}[R(\tau)].
-$$
+```
 
 
 Trajectory probability:
 
 
-$$
+```math
 p_\theta(\tau)
 =
 p(s_0)
 \prod_t
 \pi_\theta(a_t|s_t)
 P(s_{t+1}|s_t,a_t).
-$$
+```
 
 
 Use log-derivative trick:
 
 
-$$
+```math
 \nabla_\theta p_\theta(\tau)
 =
 p_\theta(\tau)
 \nabla_\theta\log p_\theta(\tau).
-$$
+```
 
 
 Environment dynamics do not depend on $\theta$, so:
 
 
-$$
+```math
 \nabla_\theta\log p_\theta(\tau)
 =
 \sum_t
 \nabla_\theta\log\pi_\theta(a_t|s_t).
-$$
+```
 
 
 Thus:
 
 
-$$
+```math
 \nabla_\theta J
 =
 \mathbb E
@@ -274,7 +274,7 @@ $$
 \nabla_\theta\log\pi_\theta(a_t|s_t)
 G_t
 \right].
-$$
+```
 
 
 This is the foundation of REINFORCE.
@@ -286,7 +286,7 @@ This is the foundation of REINFORCE.
 Subtract a baseline $b(s_t)$:
 
 
-$$
+```math
 \nabla J
 =
 \mathbb E
@@ -294,7 +294,7 @@ $$
 \nabla\log\pi(a_t|s_t)
 (G_t-b(s_t))
 ].
-$$
+```
 
 
 If $b$ does not depend on action, the estimator remains unbiased.
@@ -302,9 +302,9 @@ If $b$ does not depend on action, the estimator remains unbiased.
 Choose
 
 
-$$
+```math
 b(s)=V^\pi(s)
-$$
+```
 
 
 to obtain advantage-style policy gradients.
@@ -316,27 +316,27 @@ to obtain advantage-style policy gradients.
 Actor:
 
 
-$$
+```math
 \pi_\theta(a|s).
-$$
+```
 
 
 Critic:
 
 
-$$
+```math
 V_\phi(s).
-$$
+```
 
 
 TD error:
 
 
-$$
+```math
 \delta_t
 =
 r_t+\gamma V_\phi(s_{t+1})-V_\phi(s_t).
-$$
+```
 
 
 Use $\delta_t$ as a low-variance estimate of advantage.
@@ -348,22 +348,22 @@ Use $\delta_t$ as a low-variance estimate of advantage.
 Temporal-difference residual:
 
 
-$$
+```math
 \delta_t
 =
 r_t+\gamma V(s_{t+1})-V(s_t).
-$$
+```
 
 
 Generalized advantage estimate:
 
 
-$$
+```math
 \hat A_t^{\rm GAE}
 =
 \sum_{l=0}^{\infty}
 (\gamma\lambda)^l\delta_{t+l}.
-$$
+```
 
 
 $\lambda$ trades bias for variance.
@@ -375,7 +375,7 @@ $\lambda$ trades bias for variance.
 Probability ratio:
 
 
-$$
+```math
 r_t(\theta)
 =
 \frac{
@@ -383,21 +383,21 @@ r_t(\theta)
 }{
 \pi_{\theta_{\rm old}}(a_t|s_t)
 }.
-$$
+```
 
 
 Unclipped surrogate:
 
 
-$$
+```math
 r_t(\theta)\hat A_t.
-$$
+```
 
 
 Clipped objective:
 
 
-$$
+```math
 L^{\rm CLIP}
 =
 \mathbb E
@@ -407,7 +407,7 @@ r_t\hat A_t,
 \mathrm{clip}(r_t,1-\epsilon,1+\epsilon)\hat A_t
 )
 ].
-$$
+```
 
 
 #### Why clipping works intuitively
@@ -429,9 +429,9 @@ Model-based:
 learn or use transition model
 
 
-$$
+```math
 \hat P(s'|s,a)
-$$
+```
 
 
 and plan through predicted futures.
@@ -444,11 +444,11 @@ World models are a major learned model-based RL approach.
 A state $s_t$ is Markov if:
 
 
-$$
+```math
 p(s_{t+1}|s_{0:t},a_{0:t})
 =
 p(s_{t+1}|s_t,a_t).
-$$
+```
 
 
 The current state must summarize all relevant history for future evolution.
@@ -456,9 +456,9 @@ The current state must summarize all relevant history for future evolution.
 In partially observable environments, observation $o_t$ may not be Markov. An agent may need history or a learned latent state:
 
 
-$$
+```math
 z_t=f(o_{\le t},a_{<t}).
-$$
+```
 
 
 This directly motivates recurrent state estimators and world models.
@@ -470,11 +470,11 @@ This directly motivates recurrent state estimators and world models.
 ### Monte Carlo target
 
 
-$$
+```math
 G_t
 =
 r_t+\gamma r_{t+1}+\cdots.
-$$
+```
 
 
 Unbiased for on-policy returns but high variance and requires episode/future completion.
@@ -482,9 +482,9 @@ Unbiased for on-policy returns but high variance and requires episode/future com
 ### TD(0) target
 
 
-$$
+```math
 r_t+\gamma V(s_{t+1}).
-$$
+```
 
 
 Bootstraps from current estimate.
@@ -500,9 +500,9 @@ Many RL algorithms navigate this bias-variance tradeoff.
 Update target uses:
 
 
-$$
+```math
 \max_{a'}Q(s',a')
-$$
+```
 
 
 regardless of which action the behavior policy actually took next.
@@ -518,74 +518,74 @@ This supports replay buffers.
 Objective:
 
 
-$$
+```math
 J(\theta)=\sum_\tau p_\theta(\tau)R(\tau).
-$$
+```
 
 
 Differentiate:
 
 
-$$
+```math
 \nabla J
 =
 \sum_\tau \nabla p_\theta(\tau)R(\tau).
-$$
+```
 
 
 Multiply/divide by $p_\theta(\tau)$:
 
 
-$$
+```math
 \nabla J
 =
 \sum_\tau
 p_\theta(\tau)
 \nabla\log p_\theta(\tau)
 R(\tau).
-$$
+```
 
 
 Thus:
 
 
-$$
+```math
 \nabla J
 =
 \mathbb E_{\tau\sim p_\theta}
 [
 \nabla\log p_\theta(\tau)R(\tau)
 ].
-$$
+```
 
 
 Trajectory probability:
 
 
-$$
+```math
 p_\theta(\tau)
 =
 p(s_0)
 \prod_t
 \pi_\theta(a_t|s_t)
 P(s_{t+1}|s_t,a_t).
-$$
+```
 
 
 Only policy depends on $\theta$:
 
 
-$$
+```math
 \nabla\log p_\theta(\tau)
 =
 \sum_t\nabla\log\pi_\theta(a_t|s_t).
-$$
+```
 
 
 Therefore:
 
 
-$$
+```math
 \nabla J
 =
 \mathbb E
@@ -593,7 +593,7 @@ $$
 \sum_t
 \nabla\log\pi_\theta(a_t|s_t)R(\tau)
 \right].
-$$
+```
 
 
 Then causality lets us replace total trajectory reward with reward-to-go.
@@ -605,19 +605,19 @@ Then causality lets us replace total trajectory reward with reward-to-go.
 Policy loss may include:
 
 
-$$
+```math
 +\beta H(\pi(\cdot|s)).
-$$
+```
 
 
 Entropy:
 
 
-$$
+```math
 H(\pi)
 =
 -\sum_a\pi(a|s)\log\pi(a|s).
-$$
+```
 
 
 Encourages exploration and prevents premature collapse to deterministic policies.
@@ -631,9 +631,9 @@ Too much entropy can prevent exploitation/convergence.
 Let
 
 
-$$
+```math
 r=\frac{\pi_\theta(a|s)}{\pi_{\rm old}(a|s)}.
-$$
+```
 
 
 ### Positive advantage
@@ -653,35 +653,35 @@ Typical combined objective includes:
 Policy:
 
 
-$$
+```math
 L_\pi
 =
 -\mathbb E[L^{CLIP}].
-$$
+```
 
 
 Value:
 
 
-$$
+```math
 L_V
 =
 \mathbb E[(V_\phi(s_t)-\hat V_t)^2].
-$$
+```
 
 
 Entropy:
 
 
-$$
+```math
 L_H=-H(\pi).
-$$
+```
 
 
 Total:
 
 
-$$
+```math
 L
 =
 L_\pi
@@ -689,7 +689,7 @@ L_\pi
 c_vL_V
 +
 c_hL_H.
-$$
+```
 
 
 This is why PPO implementation is more than one clipped equation.
@@ -719,25 +719,25 @@ PPO data become stale as policy changes. Reusing them indefinitely violates its 
 LLM state:
 
 
-$$
+```math
 s_t=(\text{prompt},y_{<t}).
-$$
+```
 
 
 Action:
 
 
-$$
+```math
 a_t=y_t.
-$$
+```
 
 
 Policy:
 
 
-$$
+```math
 \pi_\theta(a_t|s_t)
-$$
+```
 
 
 is next-token distribution.
@@ -768,43 +768,43 @@ A world model predicts environment dynamics; policy/planning decides actions.
 Suppose state $s$, action $a$, reward $r=1$, next state has:
 
 
-$$
+```math
 Q(s',a_1)=3,
 \qquad
 Q(s',a_2)=5.
-$$
+```
 
 
 With $\gamma=0.9$, target:
 
 
-$$
+```math
 y=1+0.9(5)=5.5.
-$$
+```
 
 
 If current
 
 
-$$
+```math
 Q(s,a)=4,
-$$
+```
 
 
 TD error:
 
 
-$$
+```math
 \delta=5.5-4=1.5.
-$$
+```
 
 
 Update with $\alpha=0.1$:
 
 
-$$
+```math
 Q(s,a)\leftarrow4+0.1(1.5)=4.15.
-$$
+```
 
 
 This simple numeric example is worth being able to do instantly.
@@ -816,13 +816,13 @@ This simple numeric example is worth being able to do instantly.
 For value-based method:
 
 
-$$
+```math
 a=
 \begin{cases}
 \text{random},&\text{probability }\epsilon\\
 \arg\max_aQ(s,a),&\text{otherwise}.
 \end{cases}
-$$
+```
 
 
 As $\epsilon$ decreases, policy shifts from exploration toward exploitation.
@@ -836,11 +836,11 @@ Deep RL has many more sophisticated exploration strategies, but this is the base
 Loss often implemented as:
 
 
-$$
+```math
 L_\pi
 =
 -\log\pi_\theta(a|s)A.
-$$
+```
 
 
 If $A>0$:
@@ -858,11 +858,11 @@ This is a useful sanity check for code.
 In PPO implementations, advantages are often normalized within batch:
 
 
-$$
+```math
 \hat A
 \leftarrow
 \frac{\hat A-\mu_A}{\sigma_A+\epsilon}.
-$$
+```
 
 
 This changes scale/conditioning of gradient updates and can stabilize training.
@@ -903,13 +903,13 @@ Know what `logp_old` means: probability under the policy that generated the roll
 Policy may be Gaussian:
 
 
-$$
+```math
 a\sim
 \mathcal N(
 \mu_\theta(s),
 \sigma_\theta^2(s)
 ).
-$$
+```
 
 
 Log probability is differentiable with respect to policy parameters.
@@ -923,9 +923,9 @@ This is one reason stochastic policies fit continuous-control policy-gradient me
 Offline RL learns from a fixed dataset:
 
 
-$$
+```math
 D=\{(s,a,r,s')\}
-$$
+```
 
 
 without new environment interaction.
@@ -972,11 +972,11 @@ A reward may occur long after the action that caused it.
 Return:
 
 
-$$
+```math
 G_t
 =
 r_t+\gamma r_{t+1}+\gamma^2r_{t+2}+\cdots.
-$$
+```
 
 
 The algorithm must determine which earlier actions deserve credit.
@@ -984,9 +984,9 @@ The algorithm must determine which earlier actions deserve credit.
 Discount $\gamma$ controls effective horizon:
 
 
-$$
+```math
 H_{\rm effective}\approx\frac{1}{1-\gamma}.
-$$
+```
 
 
 For $\gamma=0.99$, effective horizon is on the order of 100 steps.
@@ -1037,22 +1037,22 @@ Off-policy methods can reuse data more efficiently but require correction/algori
 If data come from behavior $\mu$ but target is $\pi$:
 
 
-$$
+```math
 \mathbb E_{a\sim\pi}[f(a)]
 =
 \mathbb E_{a\sim\mu}
 \left[
 \frac{\pi(a)}{\mu(a)}f(a)
 \right].
-$$
+```
 
 
 PPO ratio
 
 
-$$
+```math
 r_t=\frac{\pi_\theta(a_t|s_t)}{\pi_{\rm old}(a_t|s_t)}
-$$
+```
 
 
 is related to this change-of-distribution logic.
@@ -1066,18 +1066,18 @@ Large ratios lead to high variance/unstable updates, motivating restrictions.
 If current observation is insufficient, policy may need memory:
 
 
-$$
+```math
 a_t\sim
 \pi(
 a_t|
 o_t,h_t
 ),
-$$
+```
 
 
-$$
+```math
 h_t=f(h_{t-1},o_t,a_{t-1}).
-$$
+```
 
 
 This brings RL close to sequence modeling and latent world-state estimation.

@@ -35,25 +35,25 @@ Many job descriptions explicitly ask for experience adapting pretrained models; 
 Pretrain:
 
 
-$$
+```math
 \theta_0
 =
 \arg\min_\theta
 \mathcal L_{\rm pretrain}.
-$$
+```
 
 
 Adapt:
 
 
-$$
+```math
 \theta^*
 =
 \arg\min_\theta
 \mathcal L_{\rm downstream}
 \quad
 \text{initialized at }\theta_0.
-$$
+```
 
 
 The key assumption is that pretraining learned reusable representations/behaviors.
@@ -65,9 +65,9 @@ The key assumption is that pretraining learned reusable representations/behavior
 Update all parameters:
 
 
-$$
+```math
 \theta=\theta_0+\Delta\theta.
-$$
+```
 
 
 Pros:
@@ -86,17 +86,17 @@ Cons:
 Freeze backbone $f_{\theta_0}$:
 
 
-$$
+```math
 z=f_{\theta_0}(x),
-$$
+```
 
 
 train head
 
 
-$$
+```math
 \hat y=Wz+b.
-$$
+```
 
 
 This evaluates representation quality with minimal adaptation.
@@ -108,11 +108,11 @@ This evaluates representation quality with minimal adaptation.
 For pretrained linear layer
 
 
-$$
+```math
 y=Wx,
 \qquad
 W\in\mathbb R^{d_{\rm out}\times d_{\rm in}},
-$$
+```
 
 
 freeze $W$.
@@ -120,51 +120,51 @@ freeze $W$.
 Parameterize update:
 
 
-$$
+```math
 \Delta W
 =
 \frac{\alpha}{r}BA,
-$$
+```
 
 
 where
 
 
-$$
+```math
 A\in\mathbb R^{r\times d_{\rm in}},
 \qquad
 B\in\mathbb R^{d_{\rm out}\times r},
 \qquad
 r\ll \min(d_{\rm in},d_{\rm out}).
-$$
+```
 
 
 Then
 
 
-$$
+```math
 y
 =
 Wx
 +
 \frac{\alpha}{r}BAx.
-$$
+```
 
 
 Trainable parameter count:
 
 
-$$
+```math
 r(d_{\rm in}+d_{\rm out})
-$$
+```
 
 
 instead of
 
 
-$$
+```math
 d_{\rm in}d_{\rm out}.
-$$
+```
 
 
 ---
@@ -178,9 +178,9 @@ Then a full matrix $\Delta W$ is unnecessarily expressive.
 Low rank imposes
 
 
-$$
+```math
 \mathrm{rank}(\Delta W)\le r.
-$$
+```
 
 
 This is a structural prior on the update.
@@ -196,9 +196,9 @@ A common design:
 Then initially:
 
 
-$$
+```math
 \Delta W=0,
-$$
+```
 
 
 so the model starts exactly from the pretrained function.
@@ -210,11 +210,11 @@ so the model starts exactly from the pretrained function.
 At inference, one may form
 
 
-$$
+```math
 W_{\rm merged}
 =
 W+\frac{\alpha}{r}BA.
-$$
+```
 
 
 Then no separate adapter branch is needed.
@@ -262,9 +262,9 @@ QLoRA combines:
 Conceptually:
 
 
-$$
+```math
 W_q\approx W
-$$
+```
 
 
 is stored in low precision, while trainable $A,B$ remain in a training-friendly precision.
@@ -293,17 +293,17 @@ Mitigation:
 Fine-tuning changes parameters:
 
 
-$$
+```math
 \theta\to\theta'.
-$$
+```
 
 
 RAG changes context:
 
 
-$$
+```math
 x\to[x;d_1;\ldots;d_k].
-$$
+```
 
 
 A useful interview rule:
@@ -318,19 +318,19 @@ Let pretrained parameters be $\theta_0$.
 Full fine-tuning solves:
 
 
-$$
+```math
 \theta^*
 =
 \theta_0+\Delta\theta.
-$$
+```
 
 
 PEFT constrains the allowed update:
 
 
-$$
+```math
 \Delta\theta\in\mathcal S,
-$$
+```
 
 
 where $\mathcal S$ is a much smaller structured parameter space.
@@ -348,48 +348,48 @@ This is a useful unifying view:
 Suppose attention projection:
 
 
-$$
+```math
 W\in\mathbb R^{4096\times4096}.
-$$
+```
 
 
 Full matrix parameters:
 
 
-$$
+```math
 4096^2
 =
 16{,}777{,}216.
-$$
+```
 
 
 LoRA with $r=16$:
 
 
-$$
+```math
 A:16\times4096,
 \qquad
 B:4096\times16.
-$$
+```
 
 
 Trainable parameters:
 
 
-$$
+```math
 16(4096+4096)
 =
 131{,}072.
-$$
+```
 
 
 Ratio:
 
 
-$$
+```math
 \frac{131072}{16777216}
 \approx0.78\%.
-$$
+```
 
 
 For one projection, LoRA trains under 1% as many matrix parameters.
@@ -421,12 +421,12 @@ Activation memory, however, does **not** disappear entirely, because activations
 For Transformer attention:
 
 
-$$
+```math
 Q=XW_Q,\quad
 K=XW_K,\quad
 V=XW_V,\quad
 O=HW_O.
-$$
+```
 
 
 Possible targets:
@@ -447,9 +447,9 @@ There is no universal best target list; treat it as a capacity/design choice.
 LoRA update:
 
 
-$$
+```math
 \Delta W=\frac{\alpha}{r}BA.
-$$
+```
 
 
 Rank $r$ controls maximum rank of update.
@@ -465,9 +465,9 @@ If $r$ increases without scaling adjustment, update magnitude can change. This i
 Base model:
 
 
-$$
+```math
 W\rightarrow Q(W)
-$$
+```
 
 
 stored at low bit width and frozen.
@@ -475,17 +475,17 @@ stored at low bit width and frozen.
 Forward path approximately uses dequantized compute representation:
 
 
-$$
+```math
 xQ(W)
-$$
+```
 
 
 plus high-precision LoRA update:
 
 
-$$
+```math
 x\Delta W.
-$$
+```
 
 
 Only adapter parameters receive optimizer states.
@@ -560,11 +560,11 @@ model.print_trainable_parameters()
 During an interview, do not stop at API syntax. Explain what layer is being replaced conceptually:
 
 
-$$
+```math
 Wx
 \rightarrow
 Wx+\frac{\alpha}{r}BAx.
-$$
+```
 
 
 ---
@@ -612,7 +612,7 @@ Instead of optimizing from random initialization, fine-tuning starts near a usef
 Locally approximate downstream loss:
 
 
-$$
+```math
 L(\theta_0+\Delta\theta)
 \approx
 L(\theta_0)
@@ -620,7 +620,7 @@ L(\theta_0)
 g^\top\Delta\theta
 +
 \frac12\Delta\theta^\top H\Delta\theta.
-$$
+```
 
 
 If useful updates mostly lie in a low-dimensional subspace of parameter space, constraining $\Delta\theta$ can preserve much of full fine-tuning capacity.
@@ -635,11 +635,11 @@ This provides intuition for why low-rank/adapter methods can work even though th
 Insert bottleneck network:
 
 
-$$
+```math
 h'
 =
 h+W_{\rm up}\sigma(W_{\rm down}h).
-$$
+```
 
 
 This creates an explicit extra computational branch.
@@ -648,11 +648,11 @@ This creates an explicit extra computational branch.
 Modify existing linear transform:
 
 
-$$
+```math
 Wh
 \rightarrow
 ( W+BA )h.
-$$
+```
 
 
 Because $BA$ can be merged into $W$, LoRA can avoid persistent extra branch cost for a fixed merged adapter.
@@ -664,17 +664,17 @@ Because $BA$ can be merged into $W$, LoRA can avoid persistent extra branch cost
 Instead of changing internal matrices, learn virtual prompt embeddings:
 
 
-$$
+```math
 P\in\mathbb R^{m\times d}.
-$$
+```
 
 
 Input becomes:
 
 
-$$
+```math
 [P;x_1,\ldots,x_T].
-$$
+```
 
 
 Only $P$ is trainable.
@@ -727,9 +727,9 @@ Transformer attention in:
 all contains projections
 
 
-$$
+```math
 W_Q,W_K,W_V,W_O.
-$$
+```
 
 
 Therefore the same low-rank adaptation principle is modality-agnostic.
@@ -741,9 +741,9 @@ Therefore the same low-rank adaptation principle is modality-agnostic.
 For:
 
 
-$$
+```math
 y=Wx+BAx,
-$$
+```
 
 
 $W$ frozen.
@@ -751,24 +751,24 @@ $W$ frozen.
 Gradient for $B$:
 
 
-$$
+```math
 \frac{\partial L}{\partial B}
 =
 \frac{\partial L}{\partial y}
 (Ax)^\top.
-$$
+```
 
 
 Gradient for $A$:
 
 
-$$
+```math
 \frac{\partial L}{\partial A}
 =
 B^\top
 \frac{\partial L}{\partial y}
 x^\top.
-$$
+```
 
 
 If $B=0$ at initialization, initial gradient into $A$ is zero while $B$ begins learning; after $B$ moves, $A$ receives gradients. This is consistent with no-op initialization.
@@ -864,13 +864,13 @@ Therefore PEFT is not only a memory trick. It can also change the statistical bi
 Suppose a model is adapted sequentially:
 
 
-$$
+```math
 \theta_0
 \rightarrow
 \theta_A
 \rightarrow
 \theta_{A+B}.
-$$
+```
 
 
 Training on B may degrade A.
@@ -878,11 +878,11 @@ Training on B may degrade A.
 Adapters offer another strategy:
 
 
-$$
+```math
 \theta_0 + \Delta_A,
 \qquad
 \theta_0 + \Delta_B.
-$$
+```
 
 
 Tasks remain separated at parameter level.
@@ -896,11 +896,11 @@ This can simplify continual/multi-domain deployment.
 If multiple learned updates exist:
 
 
-$$
+```math
 W'
 =
 W+\Delta W_A+\Delta W_B,
-$$
+```
 
 
 composition may or may not behave well because adaptations were trained independently.
@@ -908,11 +908,11 @@ composition may or may not behave well because adaptations were trained independ
 Weighted merging:
 
 
-$$
+```math
 W'
 =
 W+\lambda_A\Delta W_A+\lambda_B\Delta W_B
-$$
+```
 
 
 is possible conceptually, but performance must be evaluated rather than assumed.

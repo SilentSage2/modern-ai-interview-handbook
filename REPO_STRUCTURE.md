@@ -54,6 +54,7 @@
 16-inference-deployment/interview_qa.md
 16-inference-deployment/references.md
 LICENSE
+MATH_STYLE.md
 README.md
 REPO_STRUCTURE.md
 cheatsheets/equation-index.md

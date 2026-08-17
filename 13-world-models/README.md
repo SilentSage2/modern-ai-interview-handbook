@@ -38,9 +38,9 @@ A world model learns how an environment evolves.
 A basic action-conditioned model:
 
 
-$$
+```math
 p_\theta(s_{t+1}|s_t,a_t).
-$$
+```
 
 
 For partially observed environments, observations $o_t$ may not be Markov, so use latent state $z_t$.
@@ -52,33 +52,33 @@ For partially observed environments, observations $o_t$ may not be Markov, so us
 Encoder:
 
 
-$$
+```math
 z_t=E_\phi(o_t).
-$$
+```
 
 
 Dynamics:
 
 
-$$
+```math
 p_\theta(z_{t+1}|z_t,a_t).
-$$
+```
 
 
 Reward model:
 
 
-$$
+```math
 \hat r_t=R_\psi(z_t,a_t).
-$$
+```
 
 
 Optional decoder:
 
 
-$$
+```math
 \hat o_t=D_\omega(z_t).
-$$
+```
 
 
 ---
@@ -96,11 +96,11 @@ Planning needs predictive state.
 Goal:
 
 
-$$
+```math
 z_t
 \approx
 \text{sufficient information for future prediction/control}.
-$$
+```
 
 
 This is representation learning with a temporal/causal purpose.
@@ -112,21 +112,21 @@ This is representation learning with a temporal/causal purpose.
 Simple model:
 
 
-$$
+```math
 \hat z_{t+1}
 =
 F_\theta(z_t,a_t).
-$$
+```
 
 
 Loss:
 
 
-$$
+```math
 \mathcal L_{\rm dyn}
 =
 \|z_{t+1}-\hat z_{t+1}\|^2.
-$$
+```
 
 
 Problem:
@@ -139,32 +139,32 @@ future may be stochastic or multimodal.
 Model:
 
 
-$$
+```math
 p_\theta(z_{t+1}|z_t,a_t).
-$$
+```
 
 
 For Gaussian transition:
 
 
-$$
+```math
 p_\theta
 =
 \mathcal N(
 \mu_\theta(z_t,a_t),
 \Sigma_\theta(z_t,a_t)
 ).
-$$
+```
 
 
 NLL training:
 
 
-$$
+```math
 \mathcal L
 =
 -\log p_\theta(z_{t+1}|z_t,a_t).
-$$
+```
 
 
 This represents uncertainty.
@@ -176,19 +176,19 @@ This represents uncertainty.
 One-step model may be accurate:
 
 
-$$
+```math
 \hat z_{t+1}=F(z_t,a_t),
-$$
+```
 
 
 but rollout uses predictions recursively:
 
 
-$$
+```math
 \hat z_{t+2}
 =
 F(\hat z_{t+1},a_{t+1}).
-$$
+```
 
 
 Small errors compound.
@@ -210,50 +210,50 @@ Important mitigation ideas:
 Given current latent $z_t$, evaluate candidate action sequence
 
 
-$$
+```math
 a_{t:t+H-1}.
-$$
+```
 
 
 Roll out:
 
 
-$$
+```math
 \hat z_{t+k+1}
 =
 F(\hat z_{t+k},a_{t+k}).
-$$
+```
 
 
 Predict rewards:
 
 
-$$
+```math
 \hat r_{t+k}
 =
 R(\hat z_{t+k},a_{t+k}).
-$$
+```
 
 
 Score:
 
 
-$$
+```math
 J(a_{t:t+H-1})
 =
 \sum_{k=0}^{H-1}
 \gamma^k\hat r_{t+k}.
-$$
+```
 
 
 Choose:
 
 
-$$
+```math
 a^*_{t:t+H-1}
 =
 \arg\max J.
-$$
+```
 
 
 Execute only first action, observe real environment, and replan. This is model predictive control.
@@ -267,7 +267,7 @@ Instead of planning every action sequence explicitly, learn actor and critic fro
 Conceptual loop:
 
 
-$$
+```math
 \text{real data}
 \rightarrow
 \text{world model}
@@ -275,7 +275,7 @@ $$
 \text{imagined latent rollouts}
 \rightarrow
 \text{actor/critic update}.
-$$
+```
 
 
 This reduces dependence on expensive real interaction.
@@ -287,17 +287,17 @@ This reduces dependence on expensive real interaction.
 Pixel prediction objective:
 
 
-$$
+```math
 \|\hat o_{t+1}-o_{t+1}\|.
-$$
+```
 
 
 Representation prediction:
 
 
-$$
+```math
 \|\hat z_{t+1}-z_{t+1}\|.
-$$
+```
 
 
 Representation prediction can ignore unpredictable or task-irrelevant pixel details.
@@ -311,17 +311,17 @@ But it risks learning a representation that hides information needed for control
 Generic conditional generator:
 
 
-$$
+```math
 p(x|c).
-$$
+```
 
 
 World model:
 
 
-$$
+```math
 p(s_{t+1}|s_t,a_t)
-$$
+```
 
 
 with explicit temporal dynamics and intervention/action semantics.
@@ -346,22 +346,22 @@ Hybrid systems can combine both.
 A useful generic latent state-space model is:
 
 
-$$
+```math
 z_t\sim p_\theta(z_t|z_{t-1},a_{t-1}),
-$$
+```
 
 
-$$
+```math
 o_t\sim p_\theta(o_t|z_t).
-$$
+```
 
 
 Inference estimates:
 
 
-$$
+```math
 q_\phi(z_t|o_{\le t},a_{<t}).
-$$
+```
 
 
 This resembles a learned nonlinear probabilistic state-space model.
@@ -383,25 +383,25 @@ One useful design separates:
 Example:
 
 
-$$
+```math
 h_t=f(h_{t-1},z_{t-1},a_{t-1}),
-$$
+```
 
 
 prior:
 
 
-$$
+```math
 p(z_t|h_t),
-$$
+```
 
 
 posterior:
 
 
-$$
+```math
 q(z_t|h_t,o_t).
-$$
+```
 
 
 Why both?
@@ -417,23 +417,23 @@ A latent world model may combine:
 ### Reconstruction / observation prediction
 
 
-$$
+```math
 L_o=-\log p(o_t|z_t,h_t).
-$$
+```
 
 
 ### Reward prediction
 
 
-$$
+```math
 L_r=-\log p(r_t|z_t,h_t).
-$$
+```
 
 
 ### Dynamics regularization
 
 
-$$
+```math
 L_{\rm KL}
 =
 D_{\rm KL}
@@ -442,7 +442,7 @@ q(z_t|h_t,o_t)
 \|
 p(z_t|h_t)
 ).
-$$
+```
 
 
 This is conceptually VAE-like but extended through time.
@@ -454,17 +454,17 @@ This is conceptually VAE-like but extended through time.
 One-step evaluation feeds true state every time:
 
 
-$$
+```math
 \hat z_{t+1}=F(z_t,a_t).
-$$
+```
 
 
 Open-loop rollout feeds prediction:
 
 
-$$
+```math
 \hat z_{t+2}=F(\hat z_{t+1},a_{t+1}).
-$$
+```
 
 
 The second setting matches planning usage.
@@ -474,10 +474,10 @@ A model can have excellent one-step MSE but fail catastrophically after 20 recur
 Therefore evaluate error vs rollout horizon:
 
 
-$$
+```math
 E(k)=
 \|z_{t+k}-\hat z_{t+k}\|.
-$$
+```
 
 
 ---
@@ -522,9 +522,9 @@ Cross-Entropy Method can optimize continuous action sequences.
 Initialize distribution:
 
 
-$$
+```math
 a_{0:H-1}\sim\mathcal N(\mu,\Sigma).
-$$
+```
 
 
 Loop:
@@ -558,17 +558,17 @@ The main efficiency idea is that many policy-learning trajectories occur **insid
 Instead of reconstructing exact pixels:
 
 
-$$
+```math
 \hat o_{t+1}\approx o_{t+1},
-$$
+```
 
 
 predict latent target:
 
 
-$$
+```math
 \hat z_{t+1}\approx z_{t+1}.
-$$
+```
 
 
 Why useful?
@@ -583,9 +583,9 @@ But target representation design becomes critical. If it discards action-relevan
 One-step future may be multimodal:
 
 
-$$
+```math
 p(o_{t+1}|o_t,a_t).
-$$
+```
 
 
 A diffusion model can represent this conditional distribution.
@@ -648,25 +648,25 @@ A useful taxonomy separates what the model predicts.
 ### Observation model
 
 
-$$
+```math
 p(o_{t+1}|o_{\le t},a_{\le t}).
-$$
+```
 
 
 ### Latent dynamics
 
 
-$$
+```math
 p(z_{t+1}|z_t,a_t).
-$$
+```
 
 
 ### Trajectory model
 
 
-$$
+```math
 p(o_{t+1:t+H}|o_{\le t},a_{t:t+H-1}).
-$$
+```
 
 
 ### Value/reward predictive model
@@ -681,9 +681,9 @@ Different job descriptions may call all of these “world models,” so clarify 
 Without action:
 
 
-$$
+```math
 p(z_{t+1}|z_t)
-$$
+```
 
 
 models passive dynamics.
@@ -691,9 +691,9 @@ models passive dynamics.
 For control we need interventions:
 
 
-$$
+```math
 p(z_{t+1}|z_t,a_t).
-$$
+```
 
 
 Two futures can differ only because the agent chose different actions. If action is omitted, the model cannot support counterfactual planning properly.
@@ -722,23 +722,23 @@ This is a key distinction from ordinary sequence prediction.
 One-step objective:
 
 
-$$
+```math
 L_1
 =
 \|F(z_t,a_t)-z_{t+1}\|.
-$$
+```
 
 
 Multi-step objective:
 
 
-$$
+```math
 L_H
 =
 \sum_{k=1}^H
 w_k
 \|\hat z_{t+k}-z_{t+k}\|.
-$$
+```
 
 
 Multi-step losses expose the model to recursive errors during training.
@@ -753,31 +753,31 @@ long-horizon target becomes harder and may over-penalize inherently uncertain fu
 Train dynamics models:
 
 
-$$
+```math
 F_1,\ldots,F_M.
-$$
+```
 
 
 For candidate next state predictions, disagreement:
 
 
-$$
+```math
 U(z,a)
 =
 \mathrm{Var}_m[F_m(z,a)].
-$$
+```
 
 
 Planner can penalize uncertain trajectories:
 
 
-$$
+```math
 J_{\rm conservative}
 =
 J_{\rm reward}
 -
 \lambda U.
-$$
+```
 
 
 Ensemble disagreement is an approximate epistemic uncertainty signal.
@@ -805,17 +805,17 @@ This is why representation-learning objective is a core design choice, not an im
 Video frames:
 
 
-$$
+```math
 o_t\in\mathbb R^{H\times W\times C}.
-$$
+```
 
 
 A video prediction model
 
 
-$$
+```math
 p(o_{t+1}|o_{\le t})
-$$
+```
 
 
 models passive world evolution.
@@ -823,9 +823,9 @@ models passive world evolution.
 To become useful for an embodied agent, incorporate control:
 
 
-$$
+```math
 p(o_{t+1}|o_{\le t},a_t).
-$$
+```
 
 
 Large-scale generative video models and action-conditioned world models overlap but are not identical categories.
@@ -841,9 +841,9 @@ Suppose physical system state $s_t$, control $a_t$, measurement $o_t$.
 A learned surrogate can predict:
 
 
-$$
+```math
 s_{t+1}=F_\theta(s_t,a_t).
-$$
+```
 
 
 Use cases:
@@ -855,13 +855,13 @@ Use cases:
 Physics-based simulators and learned dynamics can be hybridized:
 
 
-$$
+```math
 F(s,a)
 =
 F_{\rm physics}(s,a)
 +
 \Delta_\theta(s,a).
-$$
+```
 
 
 This connects world-model thinking to model mismatch correction.
@@ -873,9 +873,9 @@ This connects world-model thinking to model mismatch correction.
 Collect trajectories:
 
 
-$$
+```math
 (s_t,a_t,r_t,s_{t+1}).
-$$
+```
 
 
 Even if environment state is low dimensional, intentionally learn latent encoder/dynamics to practice architecture.
@@ -903,25 +903,25 @@ Keep two optimizations separate.
 World model:
 
 
-$$
+```math
 \theta^*
 =
 \arg\min_\theta
 L_{\rm prediction}(\theta).
-$$
+```
 
 
 Policy:
 
 
-$$
+```math
 \phi^*
 =
 \arg\max_\phi
 \mathbb E[
 \sum_t\gamma^tr_t
 ].
-$$
+```
 
 
 A better predictive model does not automatically guarantee a better policy if prediction improvements occur on irrelevant state dimensions.
@@ -955,11 +955,11 @@ The target determines what “world understanding” means.
 Longer horizon sees farther:
 
 
-$$
+```math
 H\uparrow
 \Rightarrow
 \text{potentially better long-term decisions}.
-$$
+```
 
 
 But:

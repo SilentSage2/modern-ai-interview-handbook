@@ -36,17 +36,17 @@ Deployment experience requires understanding inference graphs, quantization, bat
 Latency:
 
 
-$$
+```math
 L=\text{time per request}.
-$$
+```
 
 
 Throughput:
 
 
-$$
+```math
 Q=\frac{\text{requests or tokens}}{\text{second}}.
-$$
+```
 
 
 Increasing batch size often raises throughput while potentially increasing queueing and per-request latency.
@@ -58,7 +58,7 @@ Increasing batch size often raises throughput while potentially increasing queue
 Conceptually:
 
 
-$$
+```math
 \text{trained graph}
 \rightarrow
 \text{graph simplification}
@@ -70,7 +70,7 @@ $$
 \text{memory planning}
 \rightarrow
 \text{engine}.
-$$
+```
 
 
 TensorRT is an optimized inference compiler/runtime for NVIDIA GPUs.
@@ -82,9 +82,9 @@ TensorRT is an optimized inference compiler/runtime for NVIDIA GPUs.
 Suppose:
 
 
-$$
+```math
 y=\mathrm{ReLU}(\mathrm{BN}(\mathrm{Conv}(x))).
-$$
+```
 
 
 Naive execution may:
@@ -102,7 +102,7 @@ Benefit is often from reduced memory traffic and launch overhead, not fewer math
 Map high-precision value $x$ to integer representation $q$:
 
 
-$$
+```math
 q
 =
 \mathrm{round}
@@ -110,15 +110,15 @@ q
 \frac{x}{s}
 \right)
 +z.
-$$
+```
 
 
 Dequantize:
 
 
-$$
+```math
 \hat x=s(q-z).
-$$
+```
 
 
 Where:
@@ -128,9 +128,9 @@ Where:
 Quantization error:
 
 
-$$
+```math
 e=x-\hat x.
-$$
+```
 
 
 Goal:
@@ -243,12 +243,12 @@ For latency distributions, report:
 For model conversion, also report numerical agreement:
 
 
-$$
+```math
 \mathrm{error}
 =
 \frac{\|y_{\rm optimized}-y_{\rm baseline}\|}
 {\|y_{\rm baseline}\|}.
-$$
+```
 
 
 <!-- DEEP_DIVE_START -->
@@ -280,11 +280,11 @@ Think in two phases.
 ### Build
 
 
-$$
+```math
 \text{model graph}
 \rightarrow
 \text{optimized engine}.
-$$
+```
 
 
 The builder considers compatible kernel implementations/tactics, tensor layouts, precision, dynamic-shape profiles, and memory planning.
@@ -344,11 +344,11 @@ can keep intermediate values closer to registers/shared/on-chip memory.
 Performance benefit can come from:
 
 
-$$
+```math
 \text{memory traffic}\downarrow
 +
 \text{kernel launches}\downarrow.
-$$
+```
 
 
 ---
@@ -358,32 +358,32 @@ $$
 For symmetric signed $b$-bit quantization, integer range approximately:
 
 
-$$
+```math
 [-(2^{b-1}-1),2^{b-1}-1].
-$$
+```
 
 
 Choose scale based on max range:
 
 
-$$
+```math
 s=
 \frac{\max |x|}
 {2^{b-1}-1}.
-$$
+```
 
 
 Then:
 
 
-$$
+```math
 q=\mathrm{clip}
 \left(
 \mathrm{round}(x/s)
 \right),
 \qquad
 \hat x=sq.
-$$
+```
 
 
 If one outlier makes $\max|x|$ huge, most ordinary values use only a small part of integer range, increasing quantization error. This motivates calibration and per-channel/group scaling.
@@ -395,9 +395,9 @@ If one outlier makes $\max|x|$ huge, most ordinary values use only a small part 
 Per-tensor:
 
 
-$$
+```math
 x\rightarrow s
-$$
+```
 
 
 one scale for whole tensor.
@@ -405,9 +405,9 @@ one scale for whole tensor.
 Per-channel:
 
 
-$$
+```math
 x_c\rightarrow s_c.
-$$
+```
 
 
 Per-channel better adapts to differing channel ranges but stores more scales and may complicate kernels.
@@ -421,9 +421,9 @@ For weight matrices, per-channel/group quantization is often attractive.
 Static shape gives compiler maximum certainty:
 
 
-$$
+```math
 [B,C,H,W]=[1,3,224,224].
-$$
+```
 
 
 Dynamic deployment may require ranges:
@@ -499,7 +499,7 @@ This increases utilization when request lengths differ.
 End-to-end latency can include:
 
 
-$$
+```math
 L_{\rm total}
 =
 L_{\rm queue}
@@ -513,7 +513,7 @@ L_{\rm compute}
 L_{\rm D2H}
 +
 L_{\rm postprocess}.
-$$
+```
 
 
 Optimizing only kernel time may not improve user-visible latency if queueing or data movement dominates.
@@ -621,11 +621,11 @@ This is why “my TensorRT kernel is 2× faster” may not mean user request is 
 If average service time per batch is $t_B$ and batch contains $B$ items:
 
 
-$$
+```math
 \mathrm{throughput}
 \approx
 \frac{B}{t_B}.
-$$
+```
 
 
 If $t_B$ grows sublinearly with $B$, throughput improves.
@@ -633,11 +633,11 @@ If $t_B$ grows sublinearly with $B$, throughput improves.
 But request latency includes waiting to form a batch:
 
 
-$$
+```math
 L_{\rm request}
 =
 L_{\rm queue}+t_B+\cdots.
-$$
+```
 
 
 Offline batch inference and online low-latency serving therefore optimize different objectives.
@@ -687,9 +687,9 @@ If calibration only contains narrow easy samples, observed activation ranges may
 Calibration is therefore a small-data estimation problem:
 
 
-$$
+```math
 \text{estimate quantization scale from representative activations}.
-$$
+```
 
 
 ---
@@ -727,9 +727,9 @@ This finer-grained scheduling addresses variable generation lengths.
 Use a smaller/faster draft model to propose several tokens:
 
 
-$$
+```math
 y_{t:t+k}^{\rm draft}.
-$$
+```
 
 
 Large target model verifies them in fewer expensive sequential steps.
@@ -788,21 +788,21 @@ For outputs $y$ and $\hat y$, use more than one metric:
 Absolute max:
 
 
-$$
+```math
 e_\infty
 =
 \max_i|y_i-\hat y_i|.
-$$
+```
 
 
 Relative L2:
 
 
-$$
+```math
 e_{\rm rel}
 =
 \frac{\|y-\hat y\|_2}{\|y\|_2+\epsilon}.
-$$
+```
 
 
 Task metric:
