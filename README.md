@@ -1,18 +1,23 @@
 # Modern AI Interview Handbook
 
-A structured study, interview, and hands-on reference for modern AI/ML roles.
+A book-style study and interview reference for modern AI/ML roles.
 
-This repository is designed around a **complete job-skill map**, not only topics that are currently unfamiliar. Strong areas such as ML, generative modeling, and diffusion stay in the curriculum as fast-review/interview material, while newer areas receive deeper hands-on work.
+The repository keeps **complete coverage** of common job requirements—including topics already strong in your background—while going deeper on Transformers, ViTs, foundation models, fine-tuning, VLMs, RL, world models, agents, and AI systems.
 
-## Goals
+## How the repository is organized
 
-1. Refresh core ML/DL knowledge for interviews.
-2. Build rigorous understanding of Transformers, ViTs, LLMs, VLMs, RL, world models, and agents.
-3. Convert "familiar with" into **hands-on experience** through small reproducible projects.
-4. Cover AI engineering: GPU systems, distributed training, TensorRT, serving, profiling, latency and throughput.
-5. Maintain reusable interview Q&A and primary references.
+Each technical module contains only three files:
 
-## Repository Map
+```text
+module/
+├── README.md          # Complete chapter: concepts + derivations + intuition + implementation + practice
+├── interview_qa.md    # Interview questions and model answers
+└── references.md      # Papers, books, and official documentation
+```
+
+The idea is simple: **open `README.md` and read the chapter continuously**, rather than jumping among many small files.
+
+## Curriculum
 
 | # | Module | Status |
 |---|---|---|
@@ -33,36 +38,49 @@ This repository is designed around a **complete job-skill map**, not only topics
 | 15 | [GPU, Distributed Training & AI Systems](15-ai-systems-distributed/) | Priority |
 | 16 | [Inference, TensorRT & Deployment](16-inference-deployment/) | Priority + Hands-on |
 
-## Recommended Study Order
+## Suggested study path
 
-**Fast review first:** 01–06  
-**Core gap-filling:** 07–11  
-**Decision/intelligence:** 12–14  
-**Systems/deployment:** 15–16
+### Part I — Core ML / DL
+01–06 are primarily rapid-review chapters:
+- ML foundations
+- deep learning
+- computer vision
+- representation learning
+- generative models
+- diffusion / score models
 
-For every module use the same loop:
+### Part II — Foundation-model core
+07–11 deserve deeper study:
+- Transformers
+- ViT / vision foundation models
+- LLMs / foundation models
+- fine-tuning / LoRA / PEFT
+- VLM / multimodal AI
 
-> Concepts → equations/intuition → interview Q&A → hands-on → explain it aloud → update notes.
+### Part III — Decision and agentic AI
+12–14:
+- reinforcement learning
+- world models
+- RAG / agents / coding agents
 
-## Hands-on portfolio targets
+### Part IV — AI systems
+15–16:
+- distributed/GPU systems
+- inference / TensorRT / deployment
 
-See [`projects/`](projects/):
+## Supporting material
 
-1. **ViT/VLM + LoRA Fine-Tuning**
-2. **Scientific RAG + Tool-Using Agent**
-3. **RL + Latent World Model**
-4. **PyTorch → TensorRT Inference Benchmark**
+- [`00-roadmap/`](00-roadmap/) — study order and progress tracking
+- [`cheatsheets/`](cheatsheets/) — rapid equation/system review
+- [`projects/`](projects/) — hands-on portfolio projects
+- [`labs/`](labs/) — runnable code and experiments
+- [`notes/`](notes/) — personal notes and interview mistakes
 
-## Suggested skill labels
+## Definition of “interview ready”
 
-- **Strong / Review** — already used in research; review for interview language and breadth.
-- **Priority** — know parts, but build systematic understanding.
-- **Priority + Hands-on** — do not stop at theory; produce a reproducible project.
+A topic is ready when you can do all four:
 
-## How to use this repo
-
-- Put personal notes under `notes/`.
-- Add solved interview questions to each module's `interview_qa.md`.
-- Add implementation snippets and experiments under `labs/`.
-- Keep references primary whenever possible: original papers, official docs, and canonical books.
-- Track progress in [`00-roadmap/progress.md`](00-roadmap/progress.md).
+1. **Concept:** explain what problem it solves.
+2. **Theory:** derive or justify its important equations.
+3. **Implementation:** describe or code a representative implementation.
+4. **Systems/tradeoff:** explain memory, compute, data, latency, robustness, or scaling consequences.
