@@ -84,3 +84,32 @@ A topic is ready when you can do all four:
 2. **Theory:** derive or justify its important equations.
 3. **Implementation:** describe or code a representative implementation.
 4. **Systems/tradeoff:** explain memory, compute, data, latency, robustness, or scaling consequences.
+
+
+## How deep each chapter goes
+
+The chapter README is intended to function like a compact textbook chapter, not a glossary. Priority chapters include:
+
+- formal definitions and assumptions;
+- derivations of central equations;
+- tensor shapes and parameter/memory scaling;
+- worked numerical examples;
+- minimal PyTorch-style implementation walkthroughs;
+- architecture comparisons;
+- common misconceptions and failure modes;
+- system implications;
+- hands-on experiments and interview framing.
+
+A good study loop is:
+
+\[
+\text{read}
+\rightarrow
+\text{derive}
+\rightarrow
+\text{implement}
+\rightarrow
+\text{explain aloud}
+\rightarrow
+\text{answer follow-up questions}.
+\]

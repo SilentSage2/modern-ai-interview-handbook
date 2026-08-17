@@ -69,3 +69,37 @@ For each answer prepare three versions:
 
 **Answer:** MoE increases total parameter capacity while activating only a subset of experts for each token, reducing compute relative to a dense model of equal parameter count.
 
+
+## Whiteboard / drill questions
+
+- Explain teacher forcing and exposure mismatch.
+- Why is perplexity insufficient for assistant evaluation?
+- How do SFT, RLHF, and DPO optimize different signals?
+- What happens to cost as context length increases?
+- Why can MoE increase parameters without proportional FLOPs?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why does weight tying make sense?
+
+**Answer:** Input and output both concern token identity in the same vocabulary. Sharing embedding and output projection reduces parameters and encourages a common token geometry.
+
+### A2. What is the difference between data contamination and overfitting?
+
+**Answer:** Contamination means evaluation examples or close variants appear in training data, invalidating benchmark independence. Overfitting is poor generalization from fitting training data too specifically; they are related but distinct.
+
+### A3. Why are sequence-level preference objectives harder than token-level SFT?
+
+**Answer:** Preference labels score whole responses, so credit assignment across individual tokens is indirect. SFT provides direct next-token targets at every response position.
+
+### A4. Why is MoE harder to serve?
+
+**Answer:** Even though only a subset of experts activates per token, routing can create irregular memory access, expert imbalance, and cross-device communication. Parameter storage can also be much larger than active FLOPs suggest.
+
+### A5. How would you evaluate whether SFT added task competence rather than only formatting?
+
+**Answer:** Use held-out task metrics, adversarial/new phrasings, and a base-model prompted baseline. Format-compliance gains alone do not prove improved underlying competence.
+
+<!-- ADVANCED_QA_END -->

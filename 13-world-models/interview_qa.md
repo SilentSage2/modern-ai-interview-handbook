@@ -41,3 +41,37 @@ For each answer prepare three versions:
 
 **Answer:** Yes, if used to model action-conditioned future states/trajectories. But diffusion used only for static data generation is not automatically a world model.
 
+
+## Whiteboard / drill questions
+
+- Why can a planner exploit model error?
+- How would you evaluate world-model error as a function of horizon?
+- Why combine deterministic and stochastic latent state?
+- Compare MPC with an actor learned from imagined trajectories.
+- Under what condition does a diffusion model qualify as a world model?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. What is the difference between open-loop and closed-loop prediction?
+
+**Answer:** Open-loop recursively feeds model predictions forward without real correction. Closed-loop/receding-horizon control repeatedly incorporates new real observations, limiting accumulated model drift.
+
+### A2. Why can a high-fidelity pixel model still be a poor controller?
+
+**Answer:** It may spend capacity on visually accurate but decision-irrelevant detail while failing to predict controllable variables or rewards precisely enough for planning.
+
+### A3. How do ensembles help a world model?
+
+**Answer:** Disagreement among independently trained dynamics models provides a rough epistemic uncertainty signal, useful for penalizing poorly supported imagined trajectories.
+
+### A4. Why is action coverage important in the training dataset?
+
+**Answer:** Counterfactual planning evaluates actions that may differ from historical behavior. If the data rarely contains those actions in similar states, transition predictions may be unreliable.
+
+### A5. What does 'imagination' mean in Dreamer-like methods?
+
+**Answer:** It means rolling forward trajectories using learned latent dynamics rather than interacting with the real environment. Actor/critic learning can then use these simulated latent trajectories.
+
+<!-- ADVANCED_QA_END -->

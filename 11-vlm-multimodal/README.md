@@ -245,6 +245,542 @@ Potential causes:
 
 Evaluation should include grounding-sensitive tests, not only fluency.
 
+<!-- DEEP_DIVE_START -->
+## Deep dive I: two major VLM families
+
+### Dual encoder
+
+```text
+image → vision encoder → z_img
+text  → text encoder   → z_txt
+```
+
+Train in shared embedding space.
+
+Excellent for:
+- retrieval;
+- zero-shot classification;
+- similarity.
+
+But it does not directly generate long free-form answers.
+
+### Generative VLM
+
+```text
+image → vision encoder → visual tokens
+                         ↓
+                     projector
+                         ↓
+text tokens ─────────→ LLM → response
+```
+
+Designed for:
+- VQA;
+- dialogue;
+- captioning;
+- multimodal reasoning.
+
+This distinction should be immediate in an interview.
+
+---
+
+## Deep dive II: CLIP batch as a similarity matrix
+
+Batch size \(B\).
+
+Image embeddings:
+
+\[
+Z_I\in\mathbb R^{B\times d}.
+\]
+
+Text embeddings:
+
+\[
+Z_T\in\mathbb R^{B\times d}.
+\]
+
+Similarity:
+
+\[
+S=Z_IZ_T^\top
+\in\mathbb R^{B\times B}.
+\]
+
+Diagonal entries are positive pairs. Off-diagonal entries act as negatives.
+
+Training performs:
+- image → correct text classification;
+- text → correct image classification.
+
+This makes CLIP extremely simple conceptually.
+
+---
+
+## Deep dive III: why a projector can work
+
+A strong pretrained ViT already encodes objects, textures, spatial patterns, and semantics.
+
+A strong LLM already encodes language/reasoning structure.
+
+Instead of retraining both from scratch, learn an interface:
+
+\[
+P:\mathbb R^{d_v}\to\mathbb R^{d_{\rm LLM}}.
+\]
+
+This is analogous to learning a coordinate transformation between representation systems.
+
+If projector-only training works, it suggests much of the needed semantic information already exists in both pretrained spaces.
+
+---
+
+## Deep dive IV: token compression
+
+Vision encoders may produce hundreds/thousands of tokens. Sending all into an LLM is expensive.
+
+A resampler can compress:
+
+\[
+N_v\text{ visual tokens}
+\rightarrow
+M\text{ latent tokens},
+\qquad M\ll N_v.
+\]
+
+Cross-attention from learned queries \(Q_l\) to image features:
+
+\[
+H=
+\mathrm{softmax}
+\left(
+\frac{Q_lK_v^\top}{\sqrt d}
+\right)V_v.
+\]
+
+This creates a fixed-size visual summary.
+
+Tradeoff:
+- fewer tokens → cheaper LLM context;
+- excessive compression → lost detail/grounding.
+
+---
+
+## Deep dive V: multimodal fine-tuning stages
+
+A practical staged strategy:
+
+### Stage A — alignment
+Freeze LLM + vision encoder; train projector.
+
+### Stage B — instruction tuning
+Train projector + LoRA on LLM.
+
+### Stage C — deeper adaptation
+Possibly unfreeze selected vision layers or add vision-side LoRA.
+
+This progression increases capacity gradually and helps diagnose where adaptation is needed.
+
+---
+
+## Deep dive VI: spatial grounding challenge
+
+Pure global image-text matching does not guarantee localization.
+
+For grounding, a model may need:
+- region features;
+- coordinates;
+- detection supervision;
+- segmentation masks;
+- high-resolution visual tokens.
+
+A model can answer “there is a dog” correctly while not knowing where the dog is.
+
+So VLM evaluation should distinguish:
+- semantic recognition;
+- grounding;
+- counting;
+- OCR;
+- spatial relations;
+- fine-grained attributes.
+
+---
+
+## Deep dive VII: hallucination as modality imbalance
+
+Suppose language model prior says:
+
+\[
+p(\text{common object}|\text{text context})
+\]
+
+is high, but visual evidence is weak.
+
+The combined model may choose a linguistically plausible answer not supported by the image.
+
+You can conceptualize this as competition between:
+- language prior;
+- visual likelihood/evidence.
+
+Mitigation:
+- better visual features;
+- stronger grounding data;
+- higher-resolution input;
+- refusal/uncertainty behavior;
+- contrastive or region-level losses;
+- retrieval/tool assistance.
+
+---
+
+## Minimal projector example
+
+```python
+vision = vision_encoder(image)      # [B,Nv,Dv]
+visual_tokens = projector(vision)   # [B,Nv,Dllm]
+
+text_tokens = token_embed(input_ids)  # [B,Nt,Dllm]
+
+x = torch.cat([visual_tokens, text_tokens], dim=1)
+logits = llm(inputs_embeds=x)
+```
+
+This minimal design hides many production details but makes the core interface explicit.
+
+---
+
+## Worked design question
+
+**Build a medical VLM for image + clinical text. What would you freeze?**
+
+Reasonable first experiment:
+1. pretrained vision encoder;
+2. pretrained language model;
+3. train small projector on paired image/report data;
+4. perform instruction tuning with LoRA;
+5. evaluate both answer quality and visual grounding;
+6. compare with text-only baseline to prove images are actually used.
+
+The text-only baseline is important. Otherwise a model may answer from dataset priors without looking at the image.
+<!-- DEEP_DIVE_END -->
+
+<!-- SECOND_DEEP_DIVE_START -->
+## Architecture case study: three ways to connect image and language
+
+### 1. Shared embedding
+CLIP style.
+
+\[
+I\rightarrow z_I,
+\quad
+T\rightarrow z_T.
+\]
+
+Best for matching/retrieval.
+
+### 2. Visual prefix
+Project image tokens to LLM dimension and prepend:
+
+\[
+[\text{visual tokens};\text{text tokens}].
+\]
+
+LLM self-attention handles both.
+
+### 3. Cross-attention
+Keep visual memory separate and let text query it.
+
+Each design creates different compute and modularity tradeoffs.
+
+---
+
+## Visual token budget
+
+Suppose ViT gives 576 tokens and LLM prompt has 1024 text tokens.
+
+Concatenated context:
+
+\[
+T=1600.
+\]
+
+Dense attention cost depends on
+
+\[
+T^2=2.56\times10^6.
+\]
+
+Compress image to 64 tokens:
+
+\[
+T=1088,
+\qquad
+T^2\approx1.18\times10^6.
+\]
+
+Visual compression can nearly halve total attention pair count in this example.
+
+This is why VLM architecture cares deeply about visual token count.
+
+---
+
+## Multi-image and video inputs
+
+For \(F\) frames, naive token count:
+
+\[
+N_{\rm total}=F N_{\rm frame}.
+\]
+
+Video quickly becomes expensive.
+
+Common ideas:
+- temporal pooling;
+- frame sampling;
+- spatial token compression;
+- temporal attention;
+- hierarchical video encoders.
+
+This creates a bridge from VLMs to video/world models.
+
+---
+
+## Contrastive vs generative multimodal objectives
+
+Contrastive:
+
+\[
+\text{align}(I,T).
+\]
+
+Generative:
+
+\[
+p(T|I).
+\]
+
+Contrastive objectives learn global compatibility. Generative objectives train detailed conditional language generation.
+
+Combining both can encourage:
+- good representation alignment;
+- fluent grounded generation.
+
+---
+
+## Negative pairs in CLIP
+
+Batch negatives assume other image/text pairs are unrelated.
+
+But false negatives can occur: two different captions/images may describe the same concept.
+
+This can limit contrastive learning.
+
+Large diverse batches improve negative coverage but also increase compute and can introduce semantically similar negatives.
+
+---
+
+## OCR and high-resolution failure
+
+A VLM can recognize global scene semantics but fail on small text.
+
+Why?
+Patch/downsampling may destroy characters before LLM ever sees them.
+
+Possible solutions:
+- higher image resolution;
+- specialized OCR tool;
+- multi-scale features;
+- crop/zoom agent;
+- dedicated text detector.
+
+This is a good example of why “bigger LLM” cannot recover information discarded upstream.
+
+---
+
+## VLM ablation design
+
+If you propose a new multimodal conditioning method, ablations should isolate:
+
+1. vision encoder choice;
+2. projector/resampler;
+3. visual token count;
+4. frozen vs tuned vision backbone;
+5. LLM LoRA vs frozen;
+6. image resolution;
+7. multimodal training data.
+
+Ablations answer **which component caused improvement**.
+
+---
+
+## Minimal contrastive loss code
+
+```python
+img = F.normalize(image_encoder(images), dim=-1)  # [B,D]
+txt = F.normalize(text_encoder(tokens), dim=-1)   # [B,D]
+
+logits = img @ txt.T / temperature                # [B,B]
+label = torch.arange(img.size(0), device=img.device)
+
+loss_i = F.cross_entropy(logits, label)
+loss_t = F.cross_entropy(logits.T, label)
+loss = 0.5 * (loss_i + loss_t)
+```
+
+Be able to explain why transpose gives text-to-image direction.
+
+---
+
+## Mini-project: small VLM adaptation
+
+One practical project:
+
+```text
+pretrained ViT/CLIP vision encoder
++ small language model
++ projector
++ LoRA
+```
+
+Task:
+scientific-image description or VQA.
+
+Baselines:
+- text only;
+- image embedding + linear classifier;
+- frozen VLM;
+- LoRA VLM.
+
+Metrics:
+- exact task metric;
+- grounding;
+- hallucination/failure examples;
+- trainable params;
+- memory.
+
+This is enough to credibly discuss multimodal fine-tuning without training a giant VLM from scratch.
+<!-- SECOND_DEEP_DIVE_END -->
+
+<!-- THIRD_DEEP_DIVE_START -->
+## Cross-modal attention shape walkthrough
+
+Text:
+
+\[
+H_t\in\mathbb R^{B\times T\times d}.
+\]
+
+Vision:
+
+\[
+H_v\in\mathbb R^{B\times N_v\times d}.
+\]
+
+Text queries vision:
+
+\[
+Q_t\in\mathbb R^{B\times h\times T\times d_h},
+\]
+
+\[
+K_v,V_v
+\in
+\mathbb R^{B\times h\times N_v\times d_h}.
+\]
+
+Score:
+
+\[
+Q_tK_v^\top
+\in
+\mathbb R^{B\times h\times T\times N_v}.
+\]
+
+Notice complexity is
+
+\[
+O(TN_vd),
+\]
+
+not \(O((T+N_v)^2d)\) for this isolated cross-attention operation.
+
+This is one reason architectures may keep modalities separate rather than concatenate every token into full self-attention.
+
+---
+
+## Multimodal positional information
+
+Visual tokens have 2D/3D spatial position; language tokens have sequence position.
+
+When combining them, the model needs to preserve modality-specific structure.
+
+Options:
+- visual encoder handles image position before projection;
+- modality/type embeddings;
+- separate positional schemes;
+- cross-attention rather than one shared position index.
+
+This is an architectural design problem, especially for multiple images or video.
+
+---
+
+## Modality dropout
+
+During training, sometimes remove or corrupt one modality.
+
+Why?
+To prevent brittle dependence and measure whether each modality contributes.
+
+But excessive modality dropout can teach model to rely on language priors instead of visual evidence.
+
+Ablation:
+- image present;
+- image masked;
+- text-only;
+- shuffled image.
+
+If prediction barely changes when image is shuffled, the model may not be visually grounded.
+
+---
+
+## VLM data problem
+
+Paired image-text data vary in quality.
+
+Captions may be:
+- incomplete;
+- noisy;
+- generated;
+- biased toward obvious objects;
+- not grounded to every detail.
+
+Instruction data may teach fluent answering without improving perception.
+
+Therefore multimodal capability depends on:
+- visual pretraining;
+- pairing quality;
+- grounding supervision;
+- task mixture.
+
+This explains why VLM training is a data problem as much as an architecture problem.
+
+---
+
+## VLM interview design template
+
+When asked to design a VLM:
+
+1. define modalities and task;
+2. choose pretrained encoders;
+3. decide fusion interface;
+4. decide token budget;
+5. choose frozen vs adapted components;
+6. define pretraining/alignment loss;
+7. define instruction tuning;
+8. evaluate modality grounding;
+9. test hallucination and robustness;
+10. profile compute/memory.
+<!-- THIRD_DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -259,13 +795,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

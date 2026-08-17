@@ -1,12 +1,21 @@
-# LLMs & Foundation Models — References
+# References
 
-Prioritize original papers, canonical books, and official documentation.
+## Primary / canonical sources
 
-- [On the Opportunities and Risks of Foundation Models](https://arxiv.org/abs/2108.07258)
+- [Foundation Models report](https://arxiv.org/abs/2108.07258)
 - [GPT-3](https://arxiv.org/abs/2005.14165)
-- [InstructGPT / RLHF](https://arxiv.org/abs/2203.02155)
+- [InstructGPT](https://arxiv.org/abs/2203.02155)
 - [DPO](https://arxiv.org/abs/2305.18290)
+- [Switch Transformers](https://arxiv.org/abs/2101.03961)
 
-## Reading method
+## How to read a reference
 
-For each paper/document, record: problem → gap → method → objective → experiments → limitations → interview takeaway.
+Do not try to memorize the full paper. Record:
+
+1. **Problem:** what limitation existed?
+2. **Core idea:** what changed?
+3. **Objective:** what is optimized?
+4. **Architecture:** what information flows where?
+5. **Evidence:** what experiment supports the claim?
+6. **Limitation:** when might it fail?
+7. **Interview takeaway:** explain the contribution in 2–3 sentences.

@@ -1,11 +1,20 @@
-# GPU, Distributed Training & AI Systems — References
+# References
 
-Prioritize original papers, canonical books, and official documentation.
+## Primary / canonical sources
 
 - [PyTorch Distributed](https://pytorch.org/docs/stable/distributed.html)
 - [PyTorch FSDP](https://pytorch.org/docs/stable/fsdp.html)
 - [DeepSpeed ZeRO](https://www.deepspeed.ai/tutorials/zero/)
+- [NVIDIA NCCL](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)
 
-## Reading method
+## How to read a reference
 
-For each paper/document, record: problem → gap → method → objective → experiments → limitations → interview takeaway.
+Do not try to memorize the full paper. Record:
+
+1. **Problem:** what limitation existed?
+2. **Core idea:** what changed?
+3. **Objective:** what is optimized?
+4. **Architecture:** what information flows where?
+5. **Evidence:** what experiment supports the claim?
+6. **Limitation:** when might it fail?
+7. **Interview takeaway:** explain the contribution in 2–3 sentences.

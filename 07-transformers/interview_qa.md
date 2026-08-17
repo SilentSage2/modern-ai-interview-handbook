@@ -63,3 +63,38 @@ For each answer prepare three versions:
 
 **Answer:** It changes how exact attention is scheduled and tiled on GPU to reduce high-bandwidth-memory traffic. It does not fundamentally change the mathematical attention output.
 
+
+## Whiteboard / drill questions
+
+- Derive the scaling factor in attention from a variance argument.
+- Why does KV cache reduce compute but increase memory?
+- Why can prefill be compute-bound while decode is bandwidth-bound?
+- How do MHA, MQA and GQA change KV memory?
+- Why is FlashAttention exact rather than approximate?
+- How would attention shapes change under cross-attention?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why might attention heads become redundant?
+
+**Answer:** Multiple heads are not guaranteed to learn distinct functions. Optimization can produce correlated heads, and pruning studies often find some heads have limited marginal contribution. Multi-head structure provides capacity, not guaranteed semantic specialization.
+
+### A2. What changes in cross-attention complexity?
+
+**Answer:** If query length is Tq and context length is Tc, score complexity is O(Tq·Tc·d) rather than O(T²d). This matters in VLMs and encoder-decoder models where the two modalities/sequences have different lengths.
+
+### A3. Why can long context hurt even if it fits in memory?
+
+**Answer:** More tokens increase compute and may dilute retrieval/attention. The model must also have been trained to use long-range information effectively; nominal context length is not equivalent to reliable long-context reasoning.
+
+### A4. How would you verify a causal mask implementation?
+
+**Answer:** Create two sequences identical up to position t but different afterward. Outputs at positions ≤t should be unchanged. This is a stronger test than visually inspecting the triangular mask.
+
+### A5. Why can GQA preserve quality better than MQA?
+
+**Answer:** GQA retains multiple K/V groups rather than forcing all query heads to share a single K/V representation, offering a middle point between full MHA expressiveness and MQA cache savings.
+
+<!-- ADVANCED_QA_END -->

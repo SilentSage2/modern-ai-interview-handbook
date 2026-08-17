@@ -202,6 +202,104 @@ The important distinction:
 - diffusion defines the generative process/objective;
 - Transformer defines the denoising network architecture.
 
+<!-- DEEP_DIVE_START -->
+## Deep dive: parameterizations and modern connections
+
+### Predicting \(\epsilon\), \(x_0\), or \(v\)
+
+From
+
+\[
+x_t
+=
+\alpha_t x_0+\sigma_t\epsilon,
+\]
+
+if the network predicts \(\epsilon\),
+
+\[
+\hat x_0
+=
+\frac{x_t-\sigma_t\hat\epsilon}{\alpha_t}.
+\]
+
+If it predicts \(x_0\), recover noise:
+
+\[
+\hat\epsilon
+=
+\frac{x_t-\alpha_t\hat x_0}{\sigma_t}.
+\]
+
+Different parameterizations emphasize different signal-to-noise regimes and numerical conditioning.
+
+### Why denoising learns a distribution
+
+At each noise level, the model learns how noisy samples should move toward regions of higher data probability. Across all \(t\), these local denoising directions define a path from a simple prior to the data distribution.
+
+This is a useful intuition for score models:
+
+\[
+s_\theta(x_t,t)
+\approx
+\nabla_{x_t}\log p_t(x_t).
+\]
+
+### Guidance as score modification
+
+Classifier-free guidance combines conditional and unconditional predictions:
+
+\[
+s_{\rm guided}
+=
+s_{\rm uncond}
++
+w(s_{\rm cond}-s_{\rm uncond}).
+\]
+
+The difference term points toward features that are more compatible with the condition.
+
+### Latent diffusion tradeoff
+
+Compression reduces cost:
+
+\[
+H\times W\times C
+\rightarrow
+h\times w\times c,\qquad hw\ll HW.
+\]
+
+But the autoencoder becomes part of the generative model. Information lost by the encoder cannot be recovered by diffusion.
+
+### Diffusion vs flow matching
+
+A useful high-level distinction:
+
+- diffusion/score training often learns denoising or score fields associated with noisy marginals;
+- flow matching directly learns a time-dependent velocity field for transporting samples along a probability path.
+
+Both can be understood as learning dynamics that transform an easy distribution into the data distribution.
+
+### Worked implementation sketch
+
+```python
+t = torch.randint(0, T, (B,), device=x0.device)
+eps = torch.randn_like(x0)
+
+a = alpha_bar[t].sqrt().view(B, 1, 1, 1)
+s = (1 - alpha_bar[t]).sqrt().view(B, 1, 1, 1)
+
+xt = a * x0 + s * eps
+eps_hat = model(xt, t, cond)
+loss = (eps_hat - eps).square().mean()
+```
+
+Interview follow-up:
+- Why can \(x_t\) be sampled directly?
+- What information does time embedding provide?
+- Why does sampling still require a reverse-time solver?
+<!-- DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -216,13 +314,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

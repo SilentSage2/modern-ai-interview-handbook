@@ -61,3 +61,37 @@ For each answer prepare three versions:
 
 **Answer:** BF16 has a much wider exponent range, reducing overflow/underflow risk in large-model training, while still using 16 bits.
 
+
+## Whiteboard / drill questions
+
+- Estimate Adam training-state memory for a 7B model.
+- Why does FSDP save memory but add communication?
+- When do you choose tensor parallel rather than data parallel?
+- Why might a GPU show low utilization despite enough memory?
+- Explain arithmetic intensity using LLM prefill vs decode.
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why can more GPUs make training slower?
+
+**Answer:** Communication, synchronization, input bottlenecks, or smaller per-GPU work can outweigh parallel compute gains. Scaling should be measured rather than assumed.
+
+### A2. What memory does gradient checkpointing not reduce?
+
+**Answer:** It primarily reduces stored activations. It does not inherently shrink parameter, optimizer-state, or gradient storage.
+
+### A3. Why does tensor parallelism have more frequent communication than data parallelism?
+
+**Answer:** Tensor-parallel devices cooperate inside individual layer operations, whereas data-parallel replicas can compute a larger local portion of the step before synchronizing gradients.
+
+### A4. Why can CPU preprocessing limit a fast GPU?
+
+**Answer:** If batches are not prepared and transferred fast enough, the GPU has idle gaps. End-to-end throughput is limited by the slowest pipeline stage.
+
+### A5. What is a good first step when GPU utilization is low?
+
+**Answer:** Profile the timeline and check input pipeline, host-device copies, kernel sizes, synchronization, and communication before changing the algorithm.
+
+<!-- ADVANCED_QA_END -->

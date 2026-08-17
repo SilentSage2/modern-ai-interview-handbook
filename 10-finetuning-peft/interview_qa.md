@@ -45,3 +45,37 @@ For each answer prepare three versions:
 
 **Answer:** When the main need is fresh, proprietary, or frequently changing knowledge rather than changing the model's core behavior.
 
+
+## Whiteboard / drill questions
+
+- Calculate LoRA parameters for a 4096×4096 matrix at ranks 8, 16, and 64.
+- Why can QLoRA fit a larger base model than LoRA alone?
+- When should you target MLP projections in addition to attention?
+- What evaluation proves fine-tuning did not destroy general capability?
+- Design a full-FT vs LoRA comparison that is scientifically fair.
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why can LoRA rank be different across layers?
+
+**Answer:** Different layers may require different adaptation capacity. A fixed global rank is convenient but not theoretically necessary; rank patterns can allocate capacity where updates are more complex.
+
+### A2. Does freezing parameters mean no activation memory is needed through them?
+
+**Answer:** No. If gradients must flow through a frozen layer to reach trainable adapters later/inside the network, activations or recomputation may still be needed. Freezing mainly removes parameter gradients and optimizer state for those weights.
+
+### A3. How do you detect catastrophic forgetting?
+
+**Answer:** Evaluate both the new target task and representative pretraining/general capabilities before and after adaptation. A target-task gain with broad regression is a forgetting signal.
+
+### A4. Why might LoRA outperform full FT on small data?
+
+**Answer:** The low-rank constraint can act as regularization and preserve pretrained structure, while full FT has enough degrees of freedom to overfit. This is data-regime dependent, not universal.
+
+### A5. What is the difference between PEFT and quantization?
+
+**Answer:** PEFT reduces or structures the trainable parameter set; quantization reduces numerical precision/storage. QLoRA combines both: quantized frozen base plus trainable low-rank adapters.
+
+<!-- ADVANCED_QA_END -->

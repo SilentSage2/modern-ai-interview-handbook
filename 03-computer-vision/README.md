@@ -108,6 +108,116 @@ ViT:
 - scales strongly with data/model size;
 - unifies vision with token-based architectures.
 
+<!-- DEEP_DIVE_START -->
+## Deep dive: spatial structure and inductive bias
+
+### Translation equivariance
+
+Let \(T_\Delta\) shift an image. A convolution approximately satisfies
+
+\[
+\mathrm{Conv}(T_\Delta x)
+=
+T_\Delta \mathrm{Conv}(x),
+\]
+
+ignoring boundary effects.
+
+That is **equivariance**, not invariance.
+
+A classifier may become more invariant after pooling/global aggregation:
+
+\[
+f(T_\Delta x)\approx f(x).
+\]
+
+This distinction is common in interviews.
+
+### Parameter efficiency of convolution
+
+A dense linear map over an \(H\times W\) image would use location-specific weights. A \(K\times K\) convolution reuses only \(K^2C_{\rm in}C_{\rm out}\) weights at every location.
+
+This encodes a strong assumption:
+
+> the same local pattern can be useful anywhere in the image.
+
+### Dilated convolution
+
+Dilation \(d>1\) spaces kernel taps apart. It increases receptive field without increasing parameter count.
+
+For a 1D kernel with \(K\) taps:
+
+\[
+K_{\rm effective}
+=
+1+d(K-1).
+\]
+
+### ResNet vs U-Net
+
+ResNet residual connection:
+
+\[
+x\rightarrow x+F(x)
+\]
+
+primarily helps optimization and representation refinement.
+
+U-Net long skip:
+
+\[
+h_{\rm encoder}^{(l)}
+\rightarrow
+h_{\rm decoder}^{(l)}
+\]
+
+transfers high-resolution features across the bottleneck.
+
+They are both called “skip connections,” but solve different architectural problems.
+
+### Segmentation losses
+
+Pixelwise cross entropy treats every pixel independently in the objective.
+
+Dice score:
+
+\[
+\mathrm{Dice}
+=
+\frac{2|P\cap G|}{|P|+|G|}.
+\]
+
+Soft Dice loss can be useful when foreground is small because it emphasizes overlap rather than being dominated by background count.
+
+### Worked tensor example
+
+For input:
+
+\[
+[B,3,224,224]
+\]
+
+Conv2D with \(64\) filters, \(K=7,S=2,P=3\):
+
+\[
+H_{\rm out}
+=
+\left\lfloor
+\frac{224+6-7}{2}+1
+\right\rfloor
+=
+112.
+\]
+
+Output:
+
+\[
+[B,64,112,112].
+\]
+
+Being able to do these shape calculations quickly is useful for architecture debugging and interviews.
+<!-- DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -122,13 +232,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

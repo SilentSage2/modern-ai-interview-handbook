@@ -45,3 +45,37 @@ For each answer prepare three versions:
 
 **Answer:** The probability ratio measures how much the current policy changed for sampled actions relative to the behavior policy that generated the data.
 
+
+## Whiteboard / drill questions
+
+- Derive policy gradient from trajectory probability.
+- Why does an action-independent baseline preserve unbiasedness?
+- Monte Carlo vs TD: explain bias and variance.
+- Why is PPO on-policy?
+- What failure happens if PPO reuses old rollouts too long?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why is the Markov assumption important for Bellman equations?
+
+**Answer:** Bellman recursion assumes the current state is sufficient to predict future return distribution under action/policy. If relevant history is missing, value functions over the observation alone may be inconsistent.
+
+### A2. Why can reward shaping be dangerous?
+
+**Answer:** The agent optimizes the specified numerical reward, which may contain loopholes. A shaped proxy can be easier to exploit than the intended task objective.
+
+### A3. Why does off-policy learning need care under distribution shift?
+
+**Answer:** The learner evaluates or improves actions/states that may be weakly represented under behavior data. Estimation errors can be amplified, especially through bootstrapping/max operations.
+
+### A4. What is the role of the critic in actor-critic?
+
+**Answer:** The critic estimates value/advantage to reduce variance and provide a learning signal for the actor. It does not choose the action directly in the standard actor-critic decomposition.
+
+### A5. Why are multiple seeds important in RL?
+
+**Answer:** Training and environment interaction are stochastic and return variance can be high. A single seed can give a misleading conclusion about algorithm quality.
+
+<!-- ADVANCED_QA_END -->

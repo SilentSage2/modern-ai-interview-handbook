@@ -41,3 +41,37 @@ For each answer prepare three versions:
 
 **Answer:** The language prior may dominate weak visual grounding, the visual encoder/projector may discard detail, or instruction data may reward fluent but insufficiently grounded answers.
 
+
+## Whiteboard / drill questions
+
+- Why is CLIP naturally suited to retrieval but not free-form generation?
+- What is lost when compressing 1024 visual tokens to 32 latent tokens?
+- How can you prove a VLM is actually using its image?
+- Projector vs cross-attention: when would you prefer each?
+- How would you evaluate visual hallucination?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. How would you test whether a VLM is ignoring the image?
+
+**Answer:** Compare normal image, shuffled image, blank image, and text-only conditions. If outputs barely change, language priors may dominate.
+
+### A2. Why is OCR a special VLM challenge?
+
+**Answer:** Small characters can be lost by image resizing/patchification before language reasoning starts. The bottleneck may be visual resolution, not LLM capacity.
+
+### A3. What is the difference between grounding and recognition?
+
+**Answer:** Recognition identifies what is present; grounding links a concept/phrase to a specific visual region or evidence. A model can recognize correctly without precise localization.
+
+### A4. Why can a dual encoder scale retrieval well?
+
+**Answer:** Images and texts can be embedded independently offline, then compared with fast vector similarity. Cross-attention models require joint computation for each pair and are much more expensive for large retrieval corpora.
+
+### A5. When would you use a reranker after CLIP-like retrieval?
+
+**Answer:** Use the dual encoder for high-recall candidate retrieval, then a more expensive cross-modal model to assess fine-grained relevance on a small candidate set.
+
+<!-- ADVANCED_QA_END -->

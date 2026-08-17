@@ -41,3 +41,37 @@ For each answer prepare three versions:
 
 **Answer:** Vanilla ViT uses global attention over all patches; Swin uses shifted local windows to reduce complexity and build a hierarchical representation more suitable for dense vision tasks.
 
+
+## Whiteboard / drill questions
+
+- Compute the number of tokens for 384×384 images with 16×16 patches.
+- Why can smaller patches become dramatically more expensive?
+- Why can MAE drop masked patches from the encoder?
+- What exactly does a linear probe measure?
+- How would you adapt a pretrained ViT to 3D medical images?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why is CLS token not strictly necessary?
+
+**Answer:** A global representation can also be formed by mean pooling patch tokens or another learned pooling mechanism. CLS is one design for collecting global information, not a mathematical requirement.
+
+### A2. How would you adapt a 2D pretrained ViT to 3D data?
+
+**Answer:** Options include slice-wise processing, inflating/learning 3D patch embedding, factorized spatial-depth attention, or using the 2D backbone as an encoder while adding depth aggregation. The choice depends on memory and whether through-plane structure matters.
+
+### A3. What does a linear probe tell you that full fine-tuning does not?
+
+**Answer:** It measures how linearly accessible downstream information already is in the frozen representation. Full fine-tuning mixes representation quality with adaptation capacity.
+
+### A4. Why can high-resolution ViT inference become expensive faster than CNN inference?
+
+**Answer:** Token count scales with image area divided by patch area, and global attention scales quadratically in token count. CNN cost generally scales more nearly linearly with pixel count for fixed kernels.
+
+### A5. What would make a vision model a foundation model rather than just a pretrained ViT?
+
+**Answer:** Broad pretraining plus evidence that the representation can adapt across multiple downstream tasks/domains/interfaces. Architecture alone does not make it a foundation model.
+
+<!-- ADVANCED_QA_END -->

@@ -240,6 +240,147 @@ Examples:
 
 The safest principle: **split first, fit preprocessing only on training data.**
 
+<!-- DEEP_DIVE_START -->
+## Deep dive: how to reason about an ML problem
+
+A strong interview answer usually starts **before** choosing a network. Ask:
+
+1. What is the random variable we want to predict?
+2. What information is available at training time and deployment time?
+3. What is the loss really assuming about the data?
+4. What is the unit of independence: image, patient, video, trajectory, user?
+5. Which distribution shifts are plausible?
+6. What metric reflects the real cost of error?
+
+For example, suppose \(y\) is a continuous target and you use MSE. You are implicitly treating deviations symmetrically and, under the maximum-likelihood interpretation, assuming Gaussian residuals with constant variance. If the residual distribution has heavy tails, MAE or a robust likelihood may be more appropriate.
+
+### Proper data splitting
+
+For independent samples, random splitting can be reasonable. For grouped data, split by group:
+
+\[
+\text{subject}_i \in \{\text{train},\text{val},\text{test}\},
+\]
+
+not individual scans from the same subject. For temporal forecasting, random splitting can leak future information; time-based splitting is safer.
+
+A useful mental model is:
+
+\[
+\text{training pipeline}
+=
+\text{split}
+\rightarrow
+\text{fit preprocessing on train}
+\rightarrow
+\text{fit model}
+\rightarrow
+\text{select on val}
+\rightarrow
+\text{report once on test}.
+\]
+
+### Precision, recall, ROC and PR curves
+
+For binary classification,
+
+\[
+\mathrm{Precision}=\frac{TP}{TP+FP},
+\qquad
+\mathrm{Recall}=\frac{TP}{TP+FN}.
+\]
+
+F1 is the harmonic mean:
+
+\[
+F1
+=
+2\frac{PR}{P+R}.
+\]
+
+ROC varies the decision threshold and plots TPR against FPR. PR curves are often more informative for highly imbalanced positive classes because they expose the precision cost of retrieving more positives.
+
+### Calibration vs discrimination
+
+Two models can rank examples equally well but assign very different confidence.
+
+Suppose model A outputs
+
+\[
+(0.51,0.52,0.53)
+\]
+
+for three correctly ranked positives, while model B outputs
+
+\[
+(0.8,0.9,0.99).
+\]
+
+Ranking metrics may be similar, but calibration differs. This matters whenever confidence drives a downstream decision.
+
+### Regularization is broader than adding a penalty
+
+Regularization includes:
+- explicit penalties: L1/L2;
+- architectural priors: convolution, low rank, locality;
+- data augmentation;
+- dropout;
+- early stopping;
+- parameter freezing;
+- limited model capacity;
+- noise injection.
+
+The general idea is not “make weights small.” It is **restrict the set of functions the optimizer can easily choose**.
+
+### Batch size and learning rate
+
+The mini-batch gradient
+
+\[
+g_B=\frac1B\sum_{i=1}^B\nabla_\theta \ell_i
+\]
+
+has lower variance as \(B\) increases. Large batches can improve hardware efficiency but reduce gradient noise. This changes optimization dynamics, which is why batch size and learning rate are often tuned together.
+
+### Worked example: choosing a loss
+
+Suppose a regression model predicts a physical quantity with occasional severe outliers.
+
+- MSE strongly emphasizes large residuals because error is squared.
+- MAE grows linearly and is more robust.
+- Huber combines quadratic behavior near zero with linear behavior in the tails.
+- Heteroscedastic Gaussian NLL can model input-dependent uncertainty:
+
+\[
+\mathcal L
+=
+\frac{(y-\mu_\theta(x))^2}{2\sigma_\theta^2(x)}
++
+\frac12\log \sigma_\theta^2(x).
+\]
+
+The second term prevents the model from trivially inflating uncertainty.
+
+### Minimal implementation pattern
+
+```python
+model.train()
+for x, y in train_loader:
+    optimizer.zero_grad(set_to_none=True)
+    pred = model(x)
+    loss = criterion(pred, y)
+    loss.backward()
+    optimizer.step()
+```
+
+What interviewers may ask next:
+- Why `zero_grad`?
+- Why `set_to_none=True`?
+- Where would mixed precision go?
+- Where would gradient clipping go?
+- Why not use the test set every epoch?
+<!-- DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -255,13 +396,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

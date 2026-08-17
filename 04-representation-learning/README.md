@@ -141,6 +141,84 @@ Contrastive negatives prevent collapse directly. Other SSL methods use:
 - variance/covariance regularization;
 - teacher-student targets.
 
+<!-- DEEP_DIVE_START -->
+## Deep dive: what makes a representation transferable?
+
+A representation \(z=f(x)\) is useful when it preserves information relevant to many downstream tasks while discarding nuisance variation.
+
+This creates tension:
+
+\[
+\text{invariance}
+\quad \text{vs} \quad
+\text{information preservation}.
+\]
+
+If augmentation says two views should map closely, the model is encouraged to become invariant to whatever differs between those views. Therefore augmentation design implicitly defines the desired invariances.
+
+### InfoNCE as classification
+
+For one anchor, choosing the positive among \(B\) candidates can be viewed as a \(B\)-way classification problem.
+
+Logit for candidate \(j\):
+
+\[
+\ell_j=\frac{z_i^\top z_j}{\tau}.
+\]
+
+Cross entropy over these logits yields InfoNCE.
+
+This makes contrastive learning easy to connect to ordinary supervised classification.
+
+### Temperature
+
+Small \(\tau\) sharpens similarity differences:
+
+\[
+p_j
+=
+\frac{\exp(s_j/\tau)}
+{\sum_k\exp(s_k/\tau)}.
+\]
+
+If \(\tau\) is too small, optimization may become dominated by very hard negatives. If too large, similarities become insufficiently discriminative.
+
+### VAE posterior collapse
+
+ELBO:
+
+\[
+\mathbb E_q[\log p_\theta(x|z)]
+-
+D_{\rm KL}(q_\phi(z|x)\|p(z)).
+\]
+
+If the decoder is extremely powerful, it may model \(x\) while ignoring \(z\). Then
+
+\[
+q_\phi(z|x)\approx p(z)
+\]
+
+and the KL becomes near zero. This is posterior collapse.
+
+Possible strategies:
+- KL annealing;
+- weaker decoder;
+- free bits;
+- better latent architecture.
+
+### Self-supervised objectives as choices of prediction target
+
+SSL families can be organized by what is predicted:
+
+- contrastive: identify corresponding views;
+- masked modeling: reconstruct missing content;
+- teacher-student: match target representation;
+- predictive representation: predict future/hidden latent features.
+
+This taxonomy connects directly to MAE, DINO, JEPA, and world models.
+<!-- DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -155,13 +233,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

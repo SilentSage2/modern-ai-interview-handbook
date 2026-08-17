@@ -45,3 +45,37 @@ For each answer prepare three versions:
 
 **Answer:** They repeatedly inspect repository state, edit files, run tests/tools, observe results, and revise rather than generating one static code completion.
 
+
+## Whiteboard / drill questions
+
+- Design an evaluation that separates retrieval failure from generation failure.
+- Why should approval happen after tool arguments are generated but before execution?
+- Manager-agent vs handoff architecture: compare them.
+- What makes a coding agent different from code completion?
+- How do you prevent an agent from looping indefinitely?
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why is final-answer accuracy not enough for agent evaluation?
+
+**Answer:** Two agents can reach the same answer with very different tool errors, costs, unsafe attempts, or brittle paths. Step-level and end-task metrics are both needed.
+
+### A2. What is the difference between an agent and a deterministic workflow?
+
+**Answer:** A workflow has predefined transitions; an agent selects actions dynamically from state/context. Good systems often use deterministic control around agentic decision points.
+
+### A3. Why can more tools reduce agent reliability?
+
+**Answer:** A larger action space makes routing harder, schemas can overlap, and irrelevant tools increase confusion. Tool sets should be minimal and well described.
+
+### A4. How should a coding agent verify a patch?
+
+**Answer:** Run targeted tests, inspect the diff, then run broader relevant checks. Verification must be external to the model's own confidence.
+
+### A5. Why is tracing important in production agents?
+
+**Answer:** Multi-step failures are otherwise difficult to localize. Tracing shows model calls, tool calls, latency, errors, handoffs, and state transitions needed for debugging/evaluation.
+
+<!-- ADVANCED_QA_END -->

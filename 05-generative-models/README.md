@@ -127,6 +127,77 @@ Z_\theta=\int e^{-E_\theta(x)}dx
 
 is generally intractable.
 
+<!-- DEEP_DIVE_START -->
+## Deep dive: a unified generative-model view
+
+Every generative model tries to represent or sample from a target distribution
+
+\[
+p_{\rm data}(x),
+\]
+
+but differs in how probability, latent variables, and sampling are handled.
+
+| Family | Likelihood | Sampling | Core difficulty |
+|---|---|---|---|
+| Autoregressive | exact factorized | sequential | slow generation |
+| VAE | variational lower bound | fast decoder | approximate inference / blurry likelihood |
+| GAN | implicit | fast | unstable adversarial training |
+| Flow | exact | fast/invertible | restrictive invertible architecture |
+| Diffusion | variational/score view | iterative | many denoising steps |
+
+### Autoregressive ordering
+
+For images, one can choose an ordering:
+
+\[
+p(x)=\prod_i p(x_i|x_{<i}).
+\]
+
+The factorization is mathematically valid for any ordering, but architecture and computational efficiency depend strongly on it.
+
+### GAN discriminator derivation
+
+For fixed generator, maximize pointwise:
+
+\[
+p_{\rm data}(x)\log D(x)+p_g(x)\log(1-D(x)).
+\]
+
+Differentiate with respect to \(D(x)\):
+
+\[
+\frac{p_{\rm data}}{D}
+-
+\frac{p_g}{1-D}=0.
+\]
+
+Solve:
+
+\[
+D^*(x)
+=
+\frac{p_{\rm data}(x)}
+{p_{\rm data}(x)+p_g(x)}.
+\]
+
+Thus the optimal discriminator estimates a density-ratio-like quantity.
+
+### Latent variables
+
+Many generative models introduce
+
+\[
+z\sim p(z),\qquad x\sim p_\theta(x|z).
+\]
+
+The modeling question becomes:
+
+> What variations should be represented in \(z\), and how can we infer \(z\) from observed \(x\)?
+
+That question reappears in VAEs, latent diffusion, and world models.
+<!-- DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -141,13 +212,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

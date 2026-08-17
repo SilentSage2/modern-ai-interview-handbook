@@ -140,6 +140,135 @@ Typical safeguards:
 - loss scaling for FP16;
 - BF16 is often more robust because it has FP32-like exponent range.
 
+<!-- DEEP_DIVE_START -->
+## Deep dive: optimization through a deep network
+
+Consider a layer
+
+\[
+h_{l+1}=\phi(W_lh_l+b_l).
+\]
+
+The Jacobian is
+
+\[
+J_l
+=
+\frac{\partial h_{l+1}}{\partial h_l}
+=
+D_{\phi'(u_l)}W_l.
+\]
+
+Across many layers,
+
+\[
+\frac{\partial h_L}{\partial h_0}
+=
+J_{L-1}J_{L-2}\cdots J_0.
+\]
+
+The product of many Jacobians explains why singular values matter. If the typical gain is \(0.8\), after 50 layers it becomes roughly
+
+\[
+0.8^{50}\approx1.4\times10^{-5}.
+\]
+
+This is the basic vanishing-gradient intuition.
+
+### Residual blocks as perturbations of identity
+
+Residual block:
+
+\[
+h_{l+1}=h_l+F_l(h_l).
+\]
+
+If \(F_l\) initially learns a small correction, then
+
+\[
+J_l
+=
+I+\frac{\partial F_l}{\partial h_l},
+\]
+
+so signal and gradients do not need to pass exclusively through a long product of arbitrary transforms.
+
+This is why the statement “skip connections preserve detail” is incomplete. In ResNet, their major role is also **optimization and conditioning**.
+
+### Activation functions
+
+#### Sigmoid
+\[
+\sigma(x)=\frac1{1+e^{-x}}.
+\]
+
+Derivative:
+
+\[
+\sigma'(x)=\sigma(x)(1-\sigma(x)).
+\]
+
+It saturates for large \(|x|\), creating small gradients.
+
+#### ReLU
+\[
+\mathrm{ReLU}(x)=\max(0,x).
+\]
+
+Cheap and non-saturating for positive inputs, but units can die if they remain negative.
+
+#### GELU
+A smooth gating-like activation widely used in Transformers:
+
+\[
+\mathrm{GELU}(x)=x\Phi(x).
+\]
+
+Interpretation: instead of a hard threshold at zero, it smoothly weights the input by how likely it is to be positive under a standard Gaussian.
+
+### Normalization: what axis?
+
+A good way to remember normalization methods is to ask **which dimensions share statistics**.
+
+- BatchNorm: statistics across batch/spatial examples for each channel.
+- LayerNorm: statistics across hidden features within each token/sample.
+- GroupNorm: groups of channels within each sample.
+
+This axis-level reasoning is more reliable than memorizing names.
+
+### Pre-norm Transformer pattern
+
+```python
+x = x + attention(norm1(x))
+x = x + mlp(norm2(x))
+```
+
+The identity residual path stays clean. This generally improves optimization stability in very deep Transformer stacks.
+
+### Gradient clipping
+
+Global-norm clipping:
+
+\[
+g\leftarrow
+g\cdot
+\min\left(1,\frac{\tau}{\|g\|_2}\right).
+\]
+
+It does not solve bad optimization fundamentally, but prevents rare extreme updates from destabilizing training.
+
+### Mixed precision mental model
+
+You do not need every tensor in the same dtype.
+
+Typical idea:
+- weights/activations in BF16 or FP16;
+- sensitive reductions/accumulation may use FP32;
+- optimizer master states may remain FP32.
+
+The objective is not “use half precision everywhere”; it is to reduce expensive memory/compute while preserving numerical stability.
+<!-- DEEP_DIVE_END -->
+
 ---
 
 ## Practical intuition and implementation notes
@@ -154,13 +283,13 @@ Use this section while turning theory into code or system design.
 
 ## Hands-on / practice
 
-## Level 1 — Reproduce
+### Level 1 — Reproduce
 Implement or run a canonical example that demonstrates the central idea.
 
-## Level 2 — Compare
+### Level 2 — Compare
 Create at least one controlled comparison (baseline vs method, accuracy vs compute, or full vs efficient version).
 
-## Level 3 — Explain
+### Level 3 — Explain
 Write:
 - what you changed;
 - why it worked or failed;

@@ -45,3 +45,37 @@ For each answer prepare three versions:
 
 **Answer:** Warm up, synchronize around timed regions, fix shapes/precision, run many iterations, and report distribution statistics plus hardware/software context.
 
+
+## Whiteboard / drill questions
+
+- Why can an optimized engine differ numerically from eager output?
+- How can dynamic shapes reduce optimization opportunities?
+- Why does weight quantization help decode throughput?
+- How do paged KV cache and continuous batching solve different problems?
+- Design a fair PyTorch vs TensorRT benchmark.
+
+
+<!-- ADVANCED_QA_START -->
+## Advanced / system follow-ups
+
+### A1. Why can lower precision improve latency beyond memory savings?
+
+**Answer:** It reduces data movement and may unlock specialized tensor-core instructions with higher throughput. Actual benefit depends on kernel support and workload shape.
+
+### A2. What is tail latency?
+
+**Answer:** High-percentile latency such as p95/p99. Online systems care because a small fraction of very slow requests can dominate user experience or SLA violations.
+
+### A3. Why should engine build time be reported separately from inference time?
+
+**Answer:** Compilation/tactic search is usually an offline cost. Mixing it into steady-state inference obscures actual serving performance.
+
+### A4. When is INT8 PTQ likely to fail?
+
+**Answer:** When activation/weight distributions are difficult to represent with chosen scales or calibration data are unrepresentative, causing large quantization error in sensitive layers.
+
+### A5. Why can larger batches hurt an online service despite higher throughput?
+
+**Answer:** Requests may wait longer to form or complete a batch, increasing queueing and tail latency. Throughput and latency objectives conflict.
+
+<!-- ADVANCED_QA_END -->
