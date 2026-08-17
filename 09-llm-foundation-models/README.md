@@ -33,23 +33,27 @@ This chapter covers the model and training stack behind modern language foundati
 
 ### 1. Autoregressive Language Modeling
 
-For tokens \(x_1,\ldots,x_T\):
+For tokens $x_1,\ldots,x_T$:
 
-\[
+
+$$
 p(x_{1:T})
 =
 \prod_{t=1}^T
 p(x_t|x_{<t}).
-\]
+$$
+
 
 Maximum likelihood minimizes
 
-\[
+
+$$
 \mathcal L
 =
 -\sum_{t=1}^T
 \log p_\theta(x_t|x_{<t}).
-\]
+$$
+
 
 A decoder-only Transformer implements these conditional distributions using causal attention.
 
@@ -59,9 +63,11 @@ A decoder-only Transformer implements these conditional distributions using caus
 
 Text is mapped to integer tokens:
 
-\[
+
+$$
 \text{text}\rightarrow (x_1,\ldots,x_T).
-\]
+$$
+
 
 Subword tokenization balances:
 - character-level flexibility;
@@ -77,19 +83,23 @@ Vocabulary size affects:
 
 ### 3. Logits and Softmax
 
-Model outputs logits \(z\in\mathbb R^{V}\).
+Model outputs logits $z\in\mathbb R^{V}$.
 
-\[
+
+$$
 p_i
 =
 \frac{e^{z_i}}{\sum_j e^{z_j}}.
-\]
+$$
 
-Cross entropy for target token \(y\):
 
-\[
+Cross entropy for target token $y$:
+
+
+$$
 \mathcal L=-\log p_y.
-\]
+$$
+
 
 ---
 
@@ -97,17 +107,21 @@ Cross entropy for target token \(y\):
 
 Average token NLL:
 
-\[
+
+$$
 \mathrm{NLL}
 =
 -\frac1T\sum_t\log p(x_t|x_{<t}).
-\]
+$$
+
 
 Perplexity:
 
-\[
+
+$$
 \mathrm{PPL}=e^{\mathrm{NLL}}.
-\]
+$$
+
 
 Interpretation:
 lower perplexity means the model assigns higher probability to observed text.
@@ -118,31 +132,35 @@ Do not treat perplexity as a complete measure of instruction following, factuali
 
 ### 5. Temperature
 
-Given logits \(z_i\), temperature \(T\):
+Given logits $z_i$, temperature $T$:
 
-\[
+
+$$
 p_i(T)
 =
 \frac{e^{z_i/T}}
 {\sum_j e^{z_j/T}}.
-\]
+$$
 
-- \(T<1\): sharper distribution.
-- \(T>1\): flatter distribution.
+
+- $T<1$: sharper distribution.
+- $T>1$: flatter distribution.
 
 ---
 
 ### 6. Top-k and Top-p
 
 #### Top-k
-Keep only the \(k\) highest-probability tokens.
+Keep only the $k$ highest-probability tokens.
 
 #### Top-p / nucleus sampling
-Choose the smallest set \(S\) such that
+Choose the smallest set $S$ such that
 
-\[
+
+$$
 \sum_{i\in S}p_i\ge p.
-\]
+$$
+
 
 Top-p adapts candidate-set size to model uncertainty.
 
@@ -152,18 +170,22 @@ Top-p adapts candidate-set size to model uncertainty.
 
 Classical task-specific learning:
 
-\[
+
+$$
 D_A\to M_A,\qquad D_B\to M_B.
-\]
+$$
+
 
 Foundation modeling:
 
-\[
+
+$$
 D_{\rm broad}
 \to M_0
 \to
 \{M_A,M_B,\ldots\}.
-\]
+$$
+
 
 Downstream adaptation can happen through:
 - prompting;
@@ -177,14 +199,16 @@ Downstream adaptation can happen through:
 
 ### 8. SFT
 
-Given instruction \(x\), target response \(y\):
+Given instruction $x$, target response $y$:
 
-\[
+
+$$
 \mathcal L_{\rm SFT}
 =
 -\sum_{t\in \text{response}}
 \log p_\theta(y_t|x,y_{<t}).
-\]
+$$
+
 
 Often prompt tokens are masked from the loss so training focuses on response generation.
 
@@ -194,11 +218,13 @@ Often prompt tokens are masked from the loss so training focuses on response gen
 
 Preference pair:
 
-\[
-(x,y_w,y_l)
-\]
 
-where \(y_w\) is preferred over \(y_l\).
+$$
+(x,y_w,y_l)
+$$
+
+
+where $y_w$ is preferred over $y_l$.
 
 This supports reward modeling or direct preference optimization.
 
@@ -206,14 +232,15 @@ This supports reward modeling or direct preference optimization.
 
 ### 10. RLHF Conceptual Pipeline
 
-1. SFT policy \(\pi_{\rm ref}\).
+1. SFT policy $\pi_{\rm ref}$.
 2. Collect human preferences.
-3. Train reward model \(r_\phi(x,y)\).
+3. Train reward model $r_\phi(x,y)$.
 4. Optimize policy reward while constraining it from drifting too far from reference.
 
 A typical objective resembles
 
-\[
+
+$$
 \max_\theta
 \mathbb E_{y\sim\pi_\theta}
 [r_\phi(x,y)]
@@ -221,7 +248,8 @@ A typical objective resembles
 \beta
 D_{\rm KL}
 (\pi_\theta\|\pi_{\rm ref}).
-\]
+$$
+
 
 The KL term stabilizes optimization and preserves language quality.
 
@@ -231,9 +259,10 @@ The KL term stabilizes optimization and preserves language quality.
 
 DPO avoids explicitly training a reward model followed by RL.
 
-For preferred \(y_w\) and rejected \(y_l\), optimize
+For preferred $y_w$ and rejected $y_l$, optimize
 
-\[
+
+$$
 -\log
 \sigma
 \left(
@@ -248,7 +277,8 @@ For preferred \(y_w\) and rejected \(y_l\), optimize
 \log\pi_{\rm ref}(y_l|x)
 ]
 \right).
-\]
+$$
+
 
 Intuition:
 increase the preferred answer's log-probability relative to the reference and decrease the rejected answer's relative log-probability.
@@ -259,15 +289,19 @@ increase the preferred answer's log-probability relative to the reference and de
 
 Weights remain fixed:
 
-\[
+
+$$
 \theta'=\theta.
-\]
+$$
+
 
 Task information enters through the context:
 
-\[
+
+$$
 p(y|x,\text{demonstrations};\theta).
-\]
+$$
+
 
 This is different from gradient-based fine-tuning.
 
@@ -276,9 +310,9 @@ This is different from gradient-based fine-tuning.
 ### 13. Scaling
 
 Useful conceptual axes:
-- model size \(N\);
-- training tokens \(D\);
-- compute \(C\).
+- model size $N$;
+- training tokens $D$;
+- compute $C$.
 
 The practical lesson is that performance depends on balancing all three. A model can be undertrained if parameter count grows without enough data/compute.
 
@@ -288,18 +322,22 @@ The practical lesson is that performance depends on balancing all three. A model
 
 Router produces expert scores:
 
-\[
+
+$$
 g(x)=\mathrm{softmax}(W_rx).
-\]
+$$
 
-Select top-\(k\) experts:
 
-\[
+Select top-$k$ experts:
+
+
+$$
 y
 =
 \sum_{i\in \mathrm{TopK}(g)}
 g_i(x)E_i(x).
-\]
+$$
+
 
 Benefit:
 large parameter capacity while activating only a subset per token.
@@ -328,29 +366,33 @@ target: The  cat sat on  the mat [EOS]
 
 The model outputs logits
 
-\[
+
+$$
 Z\in\mathbb R^{B\times T\times V}.
-\]
+$$
+
 
 Cross entropy compares each position with the next target token.
 
-One forward pass therefore creates \(T\) next-token training examples.
+One forward pass therefore creates $T$ next-token training examples.
 
 ---
 
 ## Deep dive II: teacher forcing
 
-During training, position \(t\) receives the **ground-truth previous tokens**.
+During training, position $t$ receives the **ground-truth previous tokens**.
 
 During inference, it receives previously generated tokens.
 
 This creates exposure mismatch:
 
-\[
+
+$$
 \text{training context}\sim p_{\rm data},
 \qquad
 \text{generation context}\sim p_\theta.
-\]
+$$
+
 
 Autoregressive models can compound earlier generation errors because future predictions condition on their own outputs.
 
@@ -358,7 +400,7 @@ Autoregressive models can compound earlier generation errors because future pred
 
 ## Deep dive III: tokenization engineering
 
-Vocabulary size \(V\) creates a tradeoff.
+Vocabulary size $V$ creates a tradeoff.
 
 Large vocabulary:
 - fewer tokens per text;
@@ -376,31 +418,39 @@ A tokenizer is therefore not merely preprocessing; it changes the model's comput
 
 ## Deep dive IV: embedding and output projection
 
-Input token ID \(i\) selects row:
+Input token ID $i$ selects row:
 
-\[
+
+$$
 e_i=E[i],
 \qquad
 E\in\mathbb R^{V\times d}.
-\]
+$$
+
 
 Final hidden state:
 
-\[
+
+$$
 h_t\in\mathbb R^d.
-\]
+$$
+
 
 Output logits:
 
-\[
+
+$$
 z_t=W_{\rm out}h_t.
-\]
+$$
+
 
 Often input embedding and output projection weights are tied:
 
-\[
+
+$$
 W_{\rm out}=E.
-\]
+$$
+
 
 This reduces parameters and encourages shared token geometry.
 
@@ -447,13 +497,15 @@ assistant tokens → compute CE
 
 Formally:
 
-\[
+
+$$
 \mathcal L
 =
 -\sum_t m_t\log p(y_t|y_{<t}),
 \qquad
 m_t\in\{0,1\}.
-\]
+$$
+
 
 This prevents the model from being optimized to reproduce the prompt itself.
 
@@ -463,23 +515,28 @@ This prevents the model from being optimized to reproduce the prompt itself.
 
 Suppose relative log-probability improvement over reference is:
 
-\[
+
+$$
 \Delta_w
 =
 \log\pi_\theta(y_w|x)-\log\pi_{\rm ref}(y_w|x)=1.2,
-\]
+$$
 
-\[
+
+$$
 \Delta_l
 =
 \log\pi_\theta(y_l|x)-\log\pi_{\rm ref}(y_l|x)=0.1.
-\]
+$$
+
 
 Then preferred-minus-rejected margin is:
 
-\[
+
+$$
 1.2-0.1=1.1.
-\]
+$$
+
 
 DPO rewards positive margin.
 
@@ -509,27 +566,33 @@ When discussing scaling, mention:
 
 ## Deep dive IX: MoE routing
 
-For token hidden state \(x\), router:
+For token hidden state $x$, router:
 
-\[
+
+$$
 g=W_rx.
-\]
+$$
 
-Choose top-\(k\) experts:
 
-\[
+Choose top-$k$ experts:
+
+
+$$
 S=\mathrm{TopK}(g).
-\]
+$$
+
 
 Output:
 
-\[
+
+$$
 y=\sum_{i\in S}p_iE_i(x).
-\]
+$$
+
 
 The attraction is **conditional computation**.
 
-If a dense model has \(N\) parameters, all relevant layers are active for every token. MoE can have much larger total parameters while activating only a fraction.
+If a dense model has $N$ parameters, all relevant layers are active for every token. MoE can have much larger total parameters while activating only a fraction.
 
 But experts may become imbalanced. A routing/load-balancing objective is often needed so one expert does not receive nearly all tokens.
 
@@ -542,9 +605,11 @@ Long prompt cost has two components:
 ### Prefill
 Dense attention over prompt:
 
-\[
+
+$$
 O(T^2d)
-\]
+$$
+
 
 for standard attention, though optimized kernels reduce memory traffic.
 
@@ -627,17 +692,20 @@ Suppose batch has variable lengths.
 
 Token mask:
 
-\[
+
+$$
 m_{bt}=
 \begin{cases}
 1&\text{valid target}\\
 0&\text{padding/ignored}
 \end{cases}.
-\]
+$$
+
 
 Loss:
 
-\[
+
+$$
 L
 =
 -
@@ -648,7 +716,8 @@ m_{bt}
 }{
 \sum_{b,t}m_{bt}
 }.
-\]
+$$
+
 
 Without masking, model would be trained to predict artificial padding symbols.
 
@@ -660,10 +729,12 @@ Instead of padding many short examples to max length, concatenate multiple examp
 
 Goal:
 
-\[
+
+$$
 \text{useful tokens per batch}
 \uparrow.
-\]
+$$
+
 
 But attention/loss masks must prevent unintended information leakage across examples when required by the formatting scheme.
 
@@ -675,19 +746,23 @@ Packing is an example of a data-pipeline detail that materially changes GPU util
 
 Logits:
 
-\[
+
+$$
 Z=HW_{\rm vocab}^\top,
-\]
+$$
+
 
 where
 
-\[
+
+$$
 H\in\mathbb R^{BT\times d},
 \qquad
 W_{\rm vocab}\in\mathbb R^{V\times d}.
-\]
+$$
 
-If \(V\) is large, this matrix multiplication and logits storage can be expensive.
+
+If $V$ is large, this matrix multiplication and logits storage can be expensive.
 
 Training typically needs logits for all vocabulary entries to compute softmax cross entropy.
 
@@ -699,18 +774,22 @@ Inference only needs enough probability information to choose/sample next tokens
 
 For response
 
-\[
+
+$$
 y=(y_1,\ldots,y_T),
-\]
+$$
+
 
 conditional log probability is
 
-\[
+
+$$
 \log\pi_\theta(y|x)
 =
 \sum_t
 \log\pi_\theta(y_t|x,y_{<t}).
-\]
+$$
+
 
 Preference methods like DPO operate on these sequence-level sums/differences.
 
@@ -720,29 +799,35 @@ Length can therefore affect raw log-probability comparisons; implementations nee
 
 ## Reward model formulation
 
-Given prompt-response pair \((x,y)\), reward model outputs scalar:
+Given prompt-response pair $(x,y)$, reward model outputs scalar:
 
-\[
+
+$$
 r_\phi(x,y).
-\]
+$$
+
 
 Preference training can use Bradley–Terry style probability:
 
-\[
+
+$$
 P(y_w\succ y_l)
 =
 \sigma(
 r_\phi(x,y_w)-r_\phi(x,y_l)
 ).
-\]
+$$
+
 
 Loss:
 
-\[
+
+$$
 L
 =
 -\log\sigma(r_w-r_l).
-\]
+$$
+
 
 This teaches relative ranking rather than an absolute “true reward.”
 

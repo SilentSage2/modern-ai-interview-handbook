@@ -34,39 +34,49 @@ ViT is the main bridge from classical computer vision to multimodal foundation m
 
 Input image:
 
-\[
-x\in\mathbb R^{H\times W\times C}.
-\]
 
-Patch size \(P\times P\).
+$$
+x\in\mathbb R^{H\times W\times C}.
+$$
+
+
+Patch size $P\times P$.
 
 Number of patches:
 
-\[
+
+$$
 N=\frac{HW}{P^2}.
-\]
+$$
+
 
 Each patch has
 
-\[
+
+$$
 P^2C
-\]
+$$
+
 
 values.
 
-Flatten patch \(x_p^{(i)}\) and project:
+Flatten patch $x_p^{(i)}$ and project:
 
-\[
+
+$$
 z_i=x_p^{(i)}E,
 \qquad
 E\in\mathbb R^{(P^2C)\times d}.
-\]
+$$
+
 
 Now the image becomes a token sequence:
 
-\[
+
+$$
 Z\in\mathbb R^{N\times d}.
-\]
+$$
+
 
 ---
 
@@ -74,9 +84,9 @@ Z\in\mathbb R^{N\times d}.
 
 Patchification + linear projection can be implemented with Conv2D:
 
-- kernel size \(P\);
-- stride \(P\);
-- output channels \(d\).
+- kernel size $P$;
+- stride $P$;
+- output channels $d$.
 
 Why?
 
@@ -90,17 +100,21 @@ This is a useful implementation equivalence.
 
 Add learnable
 
-\[
+
+$$
 z_{\rm cls}\in\mathbb R^d
-\]
+$$
+
 
 to the token sequence.
 
 After all Transformer blocks, use its final representation:
 
-\[
+
+$$
 h_{\rm cls}
-\]
+$$
+
 
 for classification.
 
@@ -114,12 +128,14 @@ Patch tokens need location information.
 
 Input:
 
-\[
+
+$$
 Z_0=
 [z_{\rm cls};z_1;\ldots;z_N]
 +
 E_{\rm pos}.
-\]
+$$
+
 
 If fine-tuning at a different resolution, positional embeddings may need interpolation.
 
@@ -129,17 +145,21 @@ If fine-tuning at a different resolution, positional embeddings may need interpo
 
 Number of tokens:
 
-\[
+
+$$
 N=\frac{HW}{P^2}.
-\]
+$$
+
 
 Attention cost:
 
-\[
-O(N^2d).
-\]
 
-Therefore halving patch size approximately quadruples token count and can increase attention cost by about \(16\times\).
+$$
+O(N^2d).
+$$
+
+
+Therefore halving patch size approximately quadruples token count and can increase attention cost by about $16\times$.
 
 This is why patch size has a large compute-resolution tradeoff.
 
@@ -173,13 +193,15 @@ Masked Autoencoder pipeline:
 
 Objective:
 
-\[
+
+$$
 \mathcal L
 =
 \frac1{|\mathcal M|}
 \sum_{i\in\mathcal M}
 \|x_i-\hat x_i\|^2.
-\]
+$$
+
 
 Why high masking ratio can work:
 natural images are highly redundant, so reconstruction forces learning broader structure rather than copying local texture.
@@ -192,13 +214,15 @@ Student and teacher receive different image views.
 
 Teacher parameters are often an EMA of student parameters:
 
-\[
+
+$$
 \theta_{\rm teacher}
 \leftarrow
 m\theta_{\rm teacher}
 +
 (1-m)\theta_{\rm student}.
-\]
+$$
+
 
 Train student output distribution to match teacher targets.
 
@@ -210,34 +234,42 @@ Main challenge: avoid representation collapse.
 
 Image encoder:
 
-\[
+
+$$
 z_i=f_I(x_i).
-\]
+$$
+
 
 Text encoder:
 
-\[
+
+$$
 t_i=f_T(c_i).
-\]
+$$
+
 
 Normalize embeddings and compute similarity:
 
-\[
+
+$$
 s_{ij}
 =
 \frac{z_i^\top t_j}{\tau}.
-\]
+$$
+
 
 For image-to-text classification over a batch:
 
-\[
+
+$$
 \mathcal L_{I\to T}
 =
 -\frac1B
 \sum_i
 \log
 \frac{e^{s_{ii}}}{\sum_j e^{s_{ij}}}.
-\]
+$$
+
 
 Symmetric text-to-image loss is added.
 
@@ -259,11 +291,13 @@ The key foundation-model idea is not merely segmentation accuracy. It is trainin
 
 A standard ViT does not treat an image as intrinsically 2D after patch embedding. It first converts the image to a token sequence:
 
-\[
+
+$$
 I
 \rightarrow
 (x_1,\ldots,x_N).
-\]
+$$
+
 
 The spatial prior is therefore mostly supplied by:
 - how patches are formed;
@@ -276,29 +310,37 @@ This is the conceptual reason ViT connects naturally to LLM/VLM architectures.
 
 For
 
-\[
+
+$$
 I\in\mathbb R^{B\times3\times224\times224},
-\]
+$$
 
-patch size \(P=16\):
 
-\[
+patch size $P=16$:
+
+
+$$
 N=(224/16)^2=196.
-\]
+$$
 
-If embedding dimension \(d=768\):
 
-\[
+If embedding dimension $d=768$:
+
+
+$$
 [B,3,224,224]
 \rightarrow
 [B,196,768].
-\]
+$$
+
 
 With CLS token:
 
-\[
+
+$$
 [B,197,768].
-\]
+$$
+
 
 ---
 
@@ -322,7 +364,7 @@ class PatchEmbed(nn.Module):
 ```
 
 Why is this equivalent to patch flattening + linear layer?
-Each kernel covers exactly one \(P\times P\times C\) patch and outputs a \(d\)-dimensional vector.
+Each kernel covers exactly one $P\times P\times C$ patch and outputs a $d$-dimensional vector.
 
 ---
 
@@ -330,23 +372,31 @@ Each kernel covers exactly one \(P\times P\times C\) patch and outputs a \(d\)-d
 
 224×224 image:
 
-### \(P=16\)
-\[
+### $P=16$
+
+
+$$
 N=196.
-\]
+$$
 
-### \(P=8\)
-\[
+
+### $P=8$
+
+
+$$
 N=784.
-\]
+$$
 
-Token count increases \(4\times\). Dense attention interactions increase:
 
-\[
+Token count increases $4\times$. Dense attention interactions increase:
+
+
+$$
 196^2\rightarrow784^2,
-\]
+$$
 
-which is \(16\times\) more score pairs.
+
+which is $16\times$ more score pairs.
 
 Smaller patches preserve finer detail but rapidly increase compute.
 
@@ -373,27 +423,33 @@ A strong interview answer should avoid saying “ViT is better because attention
 
 Let patch set be
 
-\[
-\{x_1,\ldots,x_N\}.
-\]
 
-Randomly choose visible subset \(V\) and masked subset \(M\).
+$$
+\{x_1,\ldots,x_N\}.
+$$
+
+
+Randomly choose visible subset $V$ and masked subset $M$.
 
 Encoder sees only:
 
-\[
-\{x_i:i\in V\}.
-\]
 
-This matters computationally. If \(75\%\) are masked, encoder processes only \(25\%\) of tokens, greatly reducing expensive self-attention.
+$$
+\{x_i:i\in V\}.
+$$
+
+
+This matters computationally. If $75\%$ are masked, encoder processes only $25\%$ of tokens, greatly reducing expensive self-attention.
 
 Decoder receives encoded visible tokens plus mask tokens and reconstructs masked patches.
 
 The asymmetry
 
-\[
+
+$$
 \text{heavy encoder} + \text{light decoder}
-\]
+$$
+
 
 is deliberate: representation quality is assigned to the encoder.
 
@@ -405,15 +461,19 @@ DINO-family learning can be understood as consistency across transformed views w
 
 Teacher output:
 
-\[
+
+$$
 p_t(y|x_{\rm global}),
-\]
+$$
+
 
 student output:
 
-\[
+
+$$
 p_s(y|x_{\rm local}).
-\]
+$$
+
 
 Train student to match teacher.
 
@@ -425,19 +485,25 @@ A subtle point: collapse prevention is essential. If both output the same consta
 
 ## Deep dive VII: linear probe vs fine-tuning
 
-Suppose a pretrained encoder \(f_{\theta_0}\).
+Suppose a pretrained encoder $f_{\theta_0}$.
 
 ### Linear probe
-\[
+
+
+$$
 z=f_{\theta_0}(x),\qquad y=Wz.
-\]
+$$
+
 
 Tests whether representation already makes task linearly accessible.
 
 ### Fine-tuning
-\[
+
+
+$$
 \theta_0\rightarrow\theta^*.
-\]
+$$
+
 
 Allows representation itself to move.
 
@@ -458,11 +524,13 @@ Examples of transfer mechanisms:
 
 The key shift is:
 
-\[
+
+$$
 \text{train one model for one task}
 \rightarrow
 \text{pretrain broad representation and adapt}.
-\]
+$$
+
 
 ---
 
@@ -502,7 +570,7 @@ Questions to answer while implementing:
 
 The notation “B/16” commonly communicates:
 - base-size Transformer;
-- \(16\times16\) image patches.
+- $16\times16$ image patches.
 
 You should not memorize one exact configuration, but know how to derive compute from:
 - image size;
@@ -513,35 +581,45 @@ You should not memorize one exact configuration, but know how to derive compute 
 
 For 224×224 images and 16×16 patches:
 
-\[
+
+$$
 N=14^2=196.
-\]
+$$
+
 
 With CLS token:
 
-\[
+
+$$
 T=197.
-\]
+$$
+
 
 If image resolution rises to 448×448:
 
-\[
+
+$$
 N=28^2=784.
-\]
+$$
+
 
 Dense score pairs scale:
 
-\[
+
+$$
 197^2\approx3.9\times10^4
-\]
+$$
+
 
 to
 
-\[
-785^2\approx6.2\times10^5,
-\]
 
-roughly \(16\times\).
+$$
+785^2\approx6.2\times10^5,
+$$
+
+
+roughly $16\times$.
 
 This is why high-resolution vision requires careful token/attention design.
 
@@ -574,19 +652,23 @@ This makes integration with detection/segmentation heads easier.
 
 If global attention cost is
 
-\[
+
+$$
 O(N^2),
-\]
+$$
 
-partition tokens into windows containing \(M\) tokens.
 
-If there are \(N/M\) windows, cost becomes approximately:
+partition tokens into windows containing $M$ tokens.
 
-\[
+If there are $N/M$ windows, cost becomes approximately:
+
+
+$$
 \frac{N}{M}M^2
 =
 NM.
-\]
+$$
+
 
 For fixed window size, complexity becomes linear in total token count.
 
@@ -598,9 +680,11 @@ Shifted windows allow information to cross previous window boundaries across lay
 
 Pretrained position table for 14×14 patches:
 
-\[
+
+$$
 E_{\rm pos}\in\mathbb R^{196\times d}.
-\]
+$$
+
 
 Fine-tuning at 28×28 patches requires 784 positions.
 
@@ -667,39 +751,49 @@ The backbone can therefore be the same while task interface changes.
 
 Volume:
 
-\[
+
+$$
 X\in\mathbb R^{B\times C\times H\times W\times D}.
-\]
+$$
+
 
 Use patch:
 
-\[
+
+$$
 P_H\times P_W\times P_D.
-\]
+$$
+
 
 Token count:
 
-\[
+
+$$
 N
 =
 \frac{H}{P_H}
 \frac{W}{P_W}
 \frac{D}{P_D}.
-\]
+$$
+
 
 3D token count can explode quickly.
 
 For 192×192×128 volume with 16×16×16 patch:
 
-\[
+
+$$
 N=12\times12\times8=1152.
-\]
+$$
+
 
 Dense attention already uses:
 
-\[
+
+$$
 1152^2\approx1.33\text{ million}
-\]
+$$
+
 
 token pairs per head/layer/sample.
 
@@ -764,25 +858,29 @@ A useful way to compare them is through the **interaction operator**.
 
 ### CNN
 
-\[
+
+$$
 y_i
 =
 \sum_{\Delta\in\mathcal N}
 W_\Delta x_{i+\Delta}.
-\]
+$$
 
-The neighborhood \(\mathcal N\) is fixed and local.
+
+The neighborhood $\mathcal N$ is fixed and local.
 
 ### ViT
 
-\[
+
+$$
 y_i
 =
 \sum_j
 A_{ij}(X)Vx_j.
-\]
+$$
 
-The interaction neighborhood can be global and the weights \(A_{ij}\) are input dependent.
+
+The interaction neighborhood can be global and the weights $A_{ij}$ are input dependent.
 
 ### Hybrid
 Convolution may first create local features/tokens, then attention models long-range interaction.
@@ -802,11 +900,13 @@ Classification only needs one global vector. Segmentation/detection need spatial
 
 Patch-token grid can be reshaped:
 
-\[
+
+$$
 [B,N,d]
 \rightarrow
 [B,H/P,W/P,d].
-\]
+$$
+
 
 Intermediate blocks represent multiple semantic depths.
 

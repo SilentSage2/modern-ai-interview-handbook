@@ -102,7 +102,8 @@ The chapter README is intended to function like a compact textbook chapter, not 
 
 A good study loop is:
 
-\[
+
+$$
 \text{read}
 \rightarrow
 \text{derive}
@@ -112,4 +113,11 @@ A good study loop is:
 \text{explain aloud}
 \rightarrow
 \text{answer follow-up questions}.
-\]
+$$
+
+
+
+
+## Markdown math convention
+
+All equations use GitHub-compatible `$...$` for inline math and `$$...$$` for display math. See [`MATH_STYLE.md`](MATH_STYLE.md).

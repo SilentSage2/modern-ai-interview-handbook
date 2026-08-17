@@ -31,11 +31,13 @@ Diffusion, world models, and multimodal generation are easier to understand when
 
 Factorize
 
-\[
+
+$$
 p(x_1,\ldots,x_T)
 =
 \prod_{t=1}^T p(x_t|x_{<t}).
-\]
+$$
+
 
 Pros:
 - exact likelihood;
@@ -56,23 +58,27 @@ Typical issue: blurry samples when Gaussian reconstruction likelihood strongly p
 
 ### 3. GAN
 
-Generator \(G(z)\), discriminator \(D(x)\):
+Generator $G(z)$, discriminator $D(x)$:
 
-\[
+
+$$
 \min_G\max_D
 \mathbb E_{x\sim p_{\rm data}}[\log D(x)]
 +
 \mathbb E_{z\sim p(z)}[\log(1-D(G(z)))].
-\]
+$$
 
-For fixed \(G\), optimal discriminator is
 
-\[
+For fixed $G$, optimal discriminator is
+
+
+$$
 D^*(x)
 =
 \frac{p_{\rm data}(x)}
 {p_{\rm data}(x)+p_g(x)}.
-\]
+$$
+
 
 Plugging this back connects GAN training to Jensen–Shannon divergence.
 
@@ -84,13 +90,16 @@ Main challenge: adversarial optimization is a game, not ordinary minimization.
 
 Invertible transform
 
-\[
+
+$$
 x=f_\theta(z),\qquad z=f_\theta^{-1}(x).
-\]
+$$
+
 
 Change of variables:
 
-\[
+
+$$
 \log p_X(x)
 =
 \log p_Z(z)
@@ -98,7 +107,8 @@ Change of variables:
 \log\left|
 \det\frac{\partial f_\theta^{-1}(x)}{\partial x}
 \right|.
-\]
+$$
+
 
 Pros:
 - exact likelihood;
@@ -113,17 +123,21 @@ Constraint:
 
 Define unnormalized density
 
-\[
+
+$$
 p_\theta(x)
 =
 \frac{e^{-E_\theta(x)}}{Z_\theta}.
-\]
+$$
+
 
 Challenge: partition function
 
-\[
+
+$$
 Z_\theta=\int e^{-E_\theta(x)}dx
-\]
+$$
+
 
 is generally intractable.
 
@@ -132,9 +146,11 @@ is generally intractable.
 
 Every generative model tries to represent or sample from a target distribution
 
-\[
+
+$$
 p_{\rm data}(x),
-\]
+$$
+
 
 but differs in how probability, latent variables, and sampling are handled.
 
@@ -150,9 +166,11 @@ but differs in how probability, latent variables, and sampling are handled.
 
 For images, one can choose an ordering:
 
-\[
+
+$$
 p(x)=\prod_i p(x_i|x_{<i}).
-\]
+$$
+
 
 The factorization is mathematically valid for any ordering, but architecture and computational efficiency depend strongly on it.
 
@@ -160,26 +178,32 @@ The factorization is mathematically valid for any ordering, but architecture and
 
 For fixed generator, maximize pointwise:
 
-\[
+
+$$
 p_{\rm data}(x)\log D(x)+p_g(x)\log(1-D(x)).
-\]
+$$
 
-Differentiate with respect to \(D(x)\):
 
-\[
+Differentiate with respect to $D(x)$:
+
+
+$$
 \frac{p_{\rm data}}{D}
 -
 \frac{p_g}{1-D}=0.
-\]
+$$
+
 
 Solve:
 
-\[
+
+$$
 D^*(x)
 =
 \frac{p_{\rm data}(x)}
 {p_{\rm data}(x)+p_g(x)}.
-\]
+$$
+
 
 Thus the optimal discriminator estimates a density-ratio-like quantity.
 
@@ -187,13 +211,15 @@ Thus the optimal discriminator estimates a density-ratio-like quantity.
 
 Many generative models introduce
 
-\[
+
+$$
 z\sim p(z),\qquad x\sim p_\theta(x|z).
-\]
+$$
+
 
 The modeling question becomes:
 
-> What variations should be represented in \(z\), and how can we infer \(z\) from observed \(x\)?
+> What variations should be represented in $z$, and how can we infer $z$ from observed $x$?
 
 That question reappears in VAEs, latent diffusion, and world models.
 <!-- DEEP_DIVE_END -->

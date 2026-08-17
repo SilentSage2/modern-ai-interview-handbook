@@ -33,17 +33,21 @@ Agent roles require more than prompting: retrieval, tool use, memory, planning, 
 
 ### 1. Retrieval-Augmented Generation
 
-Given query \(q\), retriever finds documents:
+Given query $q$, retriever finds documents:
 
-\[
+
+$$
 D_k(q)=\{d_1,\ldots,d_k\}.
-\]
+$$
+
 
 Generator produces:
 
-\[
+
+$$
 p(y|q,d_1,\ldots,d_k).
-\]
+$$
+
 
 RAG separates:
 - parametric memory: model weights;
@@ -55,35 +59,42 @@ RAG separates:
 
 Embed query and document:
 
-\[
+
+$$
 z_q=f_q(q),
 \qquad
 z_d=f_d(d).
-\]
+$$
+
 
 Similarity:
 
-\[
+
+$$
 s(q,d)=z_q^\top z_d
-\]
+$$
+
 
 or cosine similarity.
 
-Retrieve top-\(k\):
+Retrieve top-$k$:
 
-\[
+
+$$
 D_k(q)
 =
 \mathrm{TopK}_d\,s(q,d).
-\]
+$$
+
 
 ---
 
 ### 3. Contrastive Retriever Training
 
-For positive document \(d^+\):
+For positive document $d^+$:
 
-\[
+
+$$
 \mathcal L
 =
 -\log
@@ -94,7 +105,8 @@ e^{s(q,d^+)/\tau}
 +
 \sum_j e^{s(q,d_j^-)/\tau}
 }.
-\]
+$$
+
 
 This is the same broad contrastive-learning principle used in CLIP.
 
@@ -120,7 +132,8 @@ This is an engineering hyperparameter, not a cosmetic preprocessing choice.
 
 Two-stage retrieval:
 
-\[
+
+$$
 \text{fast retriever}
 \rightarrow
 \text{top-}K
@@ -128,7 +141,8 @@ Two-stage retrieval:
 \text{expensive reranker}
 \rightarrow
 \text{top-}k.
-\]
+$$
+
 
 Retriever maximizes recall; reranker improves precision.
 
@@ -138,17 +152,21 @@ Retriever maximizes recall; reranker improves precision.
 
 Model receives a tool schema:
 
-\[
+
+$$
 T_i=(name_i,\text{arguments}_i,\text{description}_i).
-\]
+$$
+
 
 Instead of free-form text, it can emit structured action
 
-\[
-a_t=(T_i,\text{args}).
-\]
 
-Runtime executes action and returns observation \(o_{t+1}\).
+$$
+a_t=(T_i,\text{args}).
+$$
+
+
+Runtime executes action and returns observation $o_{t+1}$.
 
 Important:
 the LLM chooses the action; the application/runtime performs it.
@@ -159,7 +177,8 @@ the LLM chooses the action; the application/runtime performs it.
 
 A useful abstraction:
 
-\[
+
+$$
 s_t
 \overset{\pi_{\rm LLM}}{\longrightarrow}
 a_t
@@ -167,7 +186,8 @@ a_t
 o_{t+1}
 \rightarrow
 s_{t+1}.
-\]
+$$
+
 
 State may include:
 - user goal;
@@ -186,7 +206,8 @@ This makes agent systems conceptually close to sequential decision processes.
 
 Alternates reasoning and external interaction:
 
-\[
+
+$$
 \text{reason}
 \rightarrow
 \text{act}
@@ -194,7 +215,8 @@ Alternates reasoning and external interaction:
 \text{observe}
 \rightarrow
 \text{reason}.
-\]
+$$
+
 
 Why useful:
 the model can update its beliefs using external evidence rather than relying entirely on pretrained memory.
@@ -205,11 +227,13 @@ the model can update its beliefs using external evidence rather than relying ent
 
 Explicit decomposition:
 
-\[
+
+$$
 G
 \rightarrow
 (g_1,g_2,\ldots,g_n).
-\]
+$$
+
 
 But planning adds risks:
 - plans can become stale;
@@ -269,7 +293,8 @@ Permission violations, unsafe actions, approval bypasses.
 
 Repository coding agent loop:
 
-\[
+
+$$
 \text{issue}
 \rightarrow
 \text{search/read code}
@@ -281,7 +306,8 @@ Repository coding agent loop:
 \text{inspect failures}
 \rightarrow
 \text{iterate}.
-\]
+$$
+
 
 The hard parts are:
 - repository-scale context selection;
@@ -301,26 +327,32 @@ The hard parts are:
 4. embed each chunk;
 5. store embedding + metadata.
 
-\[
+
+$$
 d_i
 \rightarrow
 z_i=f(d_i).
-\]
+$$
+
 
 ### Online query
 
-\[
+
+$$
 q\rightarrow z_q=f(q).
-\]
+$$
+
 
 Retrieve:
 
-\[
+
+$$
 i_1,\ldots,i_k
 =
 \mathrm{TopK}
 (z_q^\top z_i).
-\]
+$$
+
 
 Optionally rerank and place selected text into the model context.
 
@@ -332,19 +364,23 @@ The most important insight:
 
 ## Deep dive II: retrieval metrics
 
-If relevant set is \(R_q\) and retrieved top-\(k\) set is \(A_k\):
+If relevant set is $R_q$ and retrieved top-$k$ set is $A_k$:
 
 Recall@k:
 
-\[
+
+$$
 \frac{|A_k\cap R_q|}{|R_q|}.
-\]
+$$
+
 
 Precision@k:
 
-\[
+
+$$
 \frac{|A_k\cap R_q|}{k}.
-\]
+$$
+
 
 For RAG, recall is often critical. If supporting evidence is not retrieved, the generator cannot use it.
 
@@ -358,13 +394,15 @@ Sparse lexical methods capture exact words, identifiers, rare technical strings.
 
 Hybrid score:
 
-\[
+
+$$
 s(d,q)
 =
 \lambda s_{\rm dense}
 +
 (1-\lambda)s_{\rm sparse}.
-\]
+$$
+
 
 This is often valuable for:
 - code;
@@ -428,7 +466,8 @@ Memory is an external mechanism deciding what prior information should be restor
 
 Long-term memory pipeline:
 
-\[
+
+$$
 \text{event}
 \rightarrow
 \text{store}
@@ -436,7 +475,8 @@ Long-term memory pipeline:
 \text{retrieve later}
 \rightarrow
 \text{inject into context}.
-\]
+$$
+
 
 This is architecturally similar to RAG but personalized/task-state oriented.
 
@@ -645,13 +685,15 @@ This is a much stronger architecture than “put PDFs in a vector database.”
 
 ## Chunk overlap
 
-Suppose chunk length \(L\), overlap \(O\).
+Suppose chunk length $L$, overlap $O$.
 
 Stride:
 
-\[
+
+$$
 S=L-O.
-\]
+$$
+
 
 Overlap reduces risk that a concept split at boundary loses context, but increases:
 - index size;
@@ -668,9 +710,11 @@ User query may be underspecified.
 
 Retriever query can be transformed:
 
-\[
+
+$$
 q\rightarrow \tilde q.
-\]
+$$
+
 
 Examples:
 - expand acronym;
@@ -679,11 +723,13 @@ Examples:
 
 Multi-query retrieval:
 
-\[
+
+$$
 D=
 \bigcup_{j=1}^m
 \mathrm{Retrieve}(\tilde q_j).
-\]
+$$
+
 
 This can improve recall but increases cost and duplicate handling.
 

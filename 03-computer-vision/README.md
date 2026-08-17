@@ -29,11 +29,13 @@ CNNs remain core interview material even for ViT/VLM roles, and many vision syst
 
 ### 1. Convolution
 
-For 2D input \(x\) and kernel \(w\),
+For 2D input $x$ and kernel $w$,
 
-\[
+
+$$
 y[i,j]=\sum_{u,v} w[u,v]x[i+u,j+v].
-\]
+$$
+
 
 Weight sharing means the same detector is applied across the image.
 
@@ -47,19 +49,21 @@ Two core inductive biases:
 
 For one dimension,
 
-\[
+
+$$
 L_{\rm out}
 =
 \left\lfloor
 \frac{L_{\rm in}+2P-D(K-1)-1}{S}+1
 \right\rfloor.
-\]
+$$
+
 
 Where:
-- \(K\): kernel size;
-- \(P\): padding;
-- \(S\): stride;
-- \(D\): dilation.
+- $K$: kernel size;
+- $P$: padding;
+- $S$: stride;
+- $D$: dilation.
 
 ---
 
@@ -67,11 +71,13 @@ Where:
 
 Stacking local convolutions increases effective receptive field.
 
-For stride 1 and kernel size \(K\), \(L\) layers approximately produce
+For stride 1 and kernel size $K$, $L$ layers approximately produce
 
-\[
+
+$$
 R=1+L(K-1).
-\]
+$$
+
 
 Strides and dilation grow it faster.
 
@@ -83,11 +89,13 @@ Encoder features contain spatial detail at multiple resolutions. Decoder upsampl
 
 U-Net concatenates encoder and decoder features:
 
-\[
+
+$$
 h^{\rm dec}_l
 =
 F([h^{\rm dec}_{l+1},h^{\rm enc}_l]).
-\]
+$$
+
 
 This combines:
 - high-level context;
@@ -113,13 +121,15 @@ ViT:
 
 ### Translation equivariance
 
-Let \(T_\Delta\) shift an image. A convolution approximately satisfies
+Let $T_\Delta$ shift an image. A convolution approximately satisfies
 
-\[
+
+$$
 \mathrm{Conv}(T_\Delta x)
 =
 T_\Delta \mathrm{Conv}(x),
-\]
+$$
+
 
 ignoring boundary effects.
 
@@ -127,15 +137,17 @@ That is **equivariance**, not invariance.
 
 A classifier may become more invariant after pooling/global aggregation:
 
-\[
+
+$$
 f(T_\Delta x)\approx f(x).
-\]
+$$
+
 
 This distinction is common in interviews.
 
 ### Parameter efficiency of convolution
 
-A dense linear map over an \(H\times W\) image would use location-specific weights. A \(K\times K\) convolution reuses only \(K^2C_{\rm in}C_{\rm out}\) weights at every location.
+A dense linear map over an $H\times W$ image would use location-specific weights. A $K\times K$ convolution reuses only $K^2C_{\rm in}C_{\rm out}$ weights at every location.
 
 This encodes a strong assumption:
 
@@ -143,33 +155,39 @@ This encodes a strong assumption:
 
 ### Dilated convolution
 
-Dilation \(d>1\) spaces kernel taps apart. It increases receptive field without increasing parameter count.
+Dilation $d>1$ spaces kernel taps apart. It increases receptive field without increasing parameter count.
 
-For a 1D kernel with \(K\) taps:
+For a 1D kernel with $K$ taps:
 
-\[
+
+$$
 K_{\rm effective}
 =
 1+d(K-1).
-\]
+$$
+
 
 ### ResNet vs U-Net
 
 ResNet residual connection:
 
-\[
+
+$$
 x\rightarrow x+F(x)
-\]
+$$
+
 
 primarily helps optimization and representation refinement.
 
 U-Net long skip:
 
-\[
+
+$$
 h_{\rm encoder}^{(l)}
 \rightarrow
 h_{\rm decoder}^{(l)}
-\]
+$$
+
 
 transfers high-resolution features across the bottleneck.
 
@@ -181,11 +199,13 @@ Pixelwise cross entropy treats every pixel independently in the objective.
 
 Dice score:
 
-\[
+
+$$
 \mathrm{Dice}
 =
 \frac{2|P\cap G|}{|P|+|G|}.
-\]
+$$
+
 
 Soft Dice loss can be useful when foreground is small because it emphasizes overlap rather than being dominated by background count.
 
@@ -193,13 +213,16 @@ Soft Dice loss can be useful when foreground is small because it emphasizes over
 
 For input:
 
-\[
+
+$$
 [B,3,224,224]
-\]
+$$
 
-Conv2D with \(64\) filters, \(K=7,S=2,P=3\):
 
-\[
+Conv2D with $64$ filters, $K=7,S=2,P=3$:
+
+
+$$
 H_{\rm out}
 =
 \left\lfloor
@@ -207,13 +230,16 @@ H_{\rm out}
 \right\rfloor
 =
 112.
-\]
+$$
+
 
 Output:
 
-\[
+
+$$
 [B,64,112,112].
-\]
+$$
+
 
 Being able to do these shape calculations quickly is useful for architecture debugging and interviews.
 <!-- DEEP_DIVE_END -->

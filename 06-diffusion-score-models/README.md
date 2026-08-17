@@ -34,30 +34,37 @@ Diffusion is already a strength, so this chapter is organized as a concise but r
 
 DDPM defines
 
-\[
+
+$$
 q(x_t|x_{t-1})
 =
 \mathcal N(\sqrt{1-\beta_t}x_{t-1},\beta_t I).
-\]
+$$
+
 
 Let
 
-\[
+
+$$
 \alpha_t=1-\beta_t,\qquad
 \bar\alpha_t=\prod_{s=1}^t\alpha_s.
-\]
+$$
+
 
 Then the closed form is
 
-\[
+
+$$
 q(x_t|x_0)
 =
 \mathcal N(\sqrt{\bar\alpha_t}x_0,(1-\bar\alpha_t)I),
-\]
+$$
+
 
 so
 
-\[
+
+$$
 x_t
 =
 \sqrt{\bar\alpha_t}x_0
@@ -65,7 +72,8 @@ x_t
 \sqrt{1-\bar\alpha_t}\epsilon,
 \quad
 \epsilon\sim\mathcal N(0,I).
-\]
+$$
+
 
 This lets us sample arbitrary noise levels without simulating all previous steps.
 
@@ -75,28 +83,34 @@ This lets us sample arbitrary noise levels without simulating all previous steps
 
 Learn
 
-\[
+
+$$
 p_\theta(x_{t-1}|x_t)
 =
 \mathcal N(\mu_\theta(x_t,t),\Sigma_t).
-\]
+$$
+
 
 A common parameterization predicts the forward noise
 
-\[
+
+$$
 \epsilon_\theta(x_t,t).
-\]
+$$
+
 
 The simplified training objective is
 
-\[
+
+$$
 \mathcal L_{\rm simple}
 =
 \mathbb E_{x_0,t,\epsilon}
 \left[
 \|\epsilon-\epsilon_\theta(x_t,t)\|_2^2
 \right].
-\]
+$$
+
 
 ---
 
@@ -104,13 +118,15 @@ The simplified training objective is
 
 For Gaussian corruption,
 
-\[
+
+$$
 \nabla_{x_t}\log q(x_t|x_0)
 =
 -\frac{\epsilon}{\sqrt{1-\bar\alpha_t}}.
-\]
+$$
 
-Therefore predicting \(\epsilon\) is equivalent, up to a scale factor, to estimating the score.
+
+Therefore predicting $\epsilon$ is equivalent, up to a scale factor, to estimating the score.
 
 ---
 
@@ -118,7 +134,7 @@ Therefore predicting \(\epsilon\) is equivalent, up to a scale factor, to estima
 
 DDIM constructs a non-Markovian reverse process sharing the same training objective as DDPM.
 
-With stochasticity parameter \(\eta=0\), sampling becomes deterministic for fixed initial noise and can use fewer steps.
+With stochasticity parameter $\eta=0$, sampling becomes deterministic for fixed initial noise and can use fewer steps.
 
 ---
 
@@ -128,15 +144,17 @@ Train conditionally and with condition dropout.
 
 At inference,
 
-\[
+
+$$
 \epsilon_{\rm guided}
 =
 \epsilon_{\rm uncond}
 +
 w(\epsilon_{\rm cond}-\epsilon_{\rm uncond}).
-\]
+$$
 
-Higher \(w\) strengthens conditional fidelity but can reduce diversity and cause artifacts.
+
+Higher $w$ strengthens conditional fidelity but can reduce diversity and cause artifacts.
 
 ---
 
@@ -144,18 +162,22 @@ Higher \(w\) strengthens conditional fidelity but can reduce diversity and cause
 
 Forward SDE:
 
-\[
+
+$$
 dx=f(x,t)dt+g(t)dW_t.
-\]
+$$
+
 
 Reverse-time SDE:
 
-\[
+
+$$
 dx=
 \left[f(x,t)-g(t)^2\nabla_x\log p_t(x)\right]dt
 +
 g(t)d\bar W_t.
-\]
+$$
+
 
 Once the score is known, reverse-time simulation generates samples.
 
@@ -165,12 +187,14 @@ Once the score is known, reverse-time simulation generates samples.
 
 Associated deterministic ODE:
 
-\[
+
+$$
 dx=
 \left[
 f(x,t)-\frac12g(t)^2\nabla_x\log p_t(x)
 \right]dt.
-\]
+$$
+
 
 It shares the same marginal distributions as the SDE.
 
@@ -180,15 +204,19 @@ It shares the same marginal distributions as the SDE.
 
 Instead of applying diffusion in pixel space:
 
-\[
+
+$$
 x\overset{E}{\rightarrow} z,
-\]
+$$
 
-run diffusion in compressed latent \(z\), then decode:
 
-\[
+run diffusion in compressed latent $z$, then decode:
+
+
+$$
 z_0\overset{D}{\rightarrow}\hat x.
-\]
+$$
+
 
 This reduces spatial dimensionality and computational cost.
 
@@ -205,57 +233,67 @@ The important distinction:
 <!-- DEEP_DIVE_START -->
 ## Deep dive: parameterizations and modern connections
 
-### Predicting \(\epsilon\), \(x_0\), or \(v\)
+### Predicting $\epsilon$, $x_0$, or $v$
 
 From
 
-\[
+
+$$
 x_t
 =
 \alpha_t x_0+\sigma_t\epsilon,
-\]
+$$
 
-if the network predicts \(\epsilon\),
 
-\[
+if the network predicts $\epsilon$,
+
+
+$$
 \hat x_0
 =
 \frac{x_t-\sigma_t\hat\epsilon}{\alpha_t}.
-\]
+$$
 
-If it predicts \(x_0\), recover noise:
 
-\[
+If it predicts $x_0$, recover noise:
+
+
+$$
 \hat\epsilon
 =
 \frac{x_t-\alpha_t\hat x_0}{\sigma_t}.
-\]
+$$
+
 
 Different parameterizations emphasize different signal-to-noise regimes and numerical conditioning.
 
 ### Why denoising learns a distribution
 
-At each noise level, the model learns how noisy samples should move toward regions of higher data probability. Across all \(t\), these local denoising directions define a path from a simple prior to the data distribution.
+At each noise level, the model learns how noisy samples should move toward regions of higher data probability. Across all $t$, these local denoising directions define a path from a simple prior to the data distribution.
 
 This is a useful intuition for score models:
 
-\[
+
+$$
 s_\theta(x_t,t)
 \approx
 \nabla_{x_t}\log p_t(x_t).
-\]
+$$
+
 
 ### Guidance as score modification
 
 Classifier-free guidance combines conditional and unconditional predictions:
 
-\[
+
+$$
 s_{\rm guided}
 =
 s_{\rm uncond}
 +
 w(s_{\rm cond}-s_{\rm uncond}).
-\]
+$$
+
 
 The difference term points toward features that are more compatible with the condition.
 
@@ -263,11 +301,13 @@ The difference term points toward features that are more compatible with the con
 
 Compression reduces cost:
 
-\[
+
+$$
 H\times W\times C
 \rightarrow
 h\times w\times c,\qquad hw\ll HW.
-\]
+$$
+
 
 But the autoencoder becomes part of the generative model. Information lost by the encoder cannot be recovered by diffusion.
 
@@ -295,7 +335,7 @@ loss = (eps_hat - eps).square().mean()
 ```
 
 Interview follow-up:
-- Why can \(x_t\) be sampled directly?
+- Why can $x_t$ be sampled directly?
 - What information does time embedding provide?
 - Why does sampling still require a reverse-time solver?
 <!-- DEEP_DIVE_END -->

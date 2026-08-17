@@ -42,51 +42,62 @@ We need a mechanism that maps visual information into a representation compatibl
 
 Image embedding:
 
-\[
+
+$$
 z_i=
 \frac{f_I(x_i)}{\|f_I(x_i)\|}.
-\]
+$$
+
 
 Text embedding:
 
-\[
+
+$$
 t_i=
 \frac{f_T(c_i)}{\|f_T(c_i)\|}.
-\]
+$$
+
 
 Similarity:
 
-\[
+
+$$
 s_{ij}
 =
 \frac{z_i^\top t_j}{\tau}.
-\]
+$$
+
 
 Image-to-text loss:
 
-\[
+
+$$
 \mathcal L_{I\to T}
 =
 -\frac1B\sum_i
 \log
 \frac{e^{s_{ii}}}
 {\sum_j e^{s_{ij}}}.
-\]
+$$
+
 
 Text-to-image:
 
-\[
+
+$$
 \mathcal L_{T\to I}
 =
 -\frac1B\sum_i
 \log
 \frac{e^{s_{ii}}}
 {\sum_j e^{s_{ji}}}.
-\]
+$$
+
 
 Total:
 
-\[
+
+$$
 \mathcal L
 =
 \frac12(
@@ -94,7 +105,8 @@ Total:
 +
 \mathcal L_{T\to I}
 ).
-\]
+$$
+
 
 ---
 
@@ -102,9 +114,11 @@ Total:
 
 L2 normalization removes embedding magnitude:
 
-\[
+
+$$
 z^\top t=\cos\theta.
-\]
+$$
+
 
 The model is trained primarily on angular alignment rather than arbitrary vector norms.
 
@@ -114,23 +128,29 @@ The model is trained primarily on angular alignment rather than arbitrary vector
 
 Visual encoder:
 
-\[
+
+$$
 H_v=f_v(I)
 \in\mathbb R^{N_v\times d_v}.
-\]
+$$
+
 
 Project:
 
-\[
+
+$$
 \tilde H_v=P(H_v)
 \in\mathbb R^{N_v\times d_{\rm LLM}}.
-\]
+$$
 
-Then combine with text token embeddings \(H_t\):
 
-\[
+Then combine with text token embeddings $H_t$:
+
+
+$$
 [\tilde H_v;H_t].
-\]
+$$
+
 
 The LLM can now attend over visual and textual tokens.
 
@@ -147,9 +167,11 @@ A projector learns the interface.
 
 Simple projector:
 
-\[
+
+$$
 P(h)=Wh+b.
-\]
+$$
+
 
 More expressive versions:
 - MLP;
@@ -163,27 +185,33 @@ More expressive versions:
 
 Let text hidden states be queries:
 
-\[
+
+$$
 Q=H_tW_Q.
-\]
+$$
+
 
 Visual states provide keys and values:
 
-\[
+
+$$
 K=H_vW_K,\qquad
 V=H_vW_V.
-\]
+$$
+
 
 Then
 
-\[
+
+$$
 H_{\rm fused}
 =
 \mathrm{softmax}
 \left(
 \frac{QK^\top}{\sqrt d}
 \right)V.
-\]
+$$
+
 
 This lets language tokens selectively retrieve visual information.
 
@@ -214,19 +242,23 @@ more adaptation vs more compute and forgetting risk.
 
 Training example:
 
-\[
+
+$$
 (I,x)\to y.
-\]
+$$
+
 
 Optimize autoregressive response likelihood:
 
-\[
+
+$$
 \mathcal L
 =
 -\sum_{t\in y}
 \log
 p_\theta(y_t|I,x,y_{<t}).
-\]
+$$
+
 
 This teaches the model to condition language generation on images.
 
@@ -286,26 +318,32 @@ This distinction should be immediate in an interview.
 
 ## Deep dive II: CLIP batch as a similarity matrix
 
-Batch size \(B\).
+Batch size $B$.
 
 Image embeddings:
 
-\[
+
+$$
 Z_I\in\mathbb R^{B\times d}.
-\]
+$$
+
 
 Text embeddings:
 
-\[
+
+$$
 Z_T\in\mathbb R^{B\times d}.
-\]
+$$
+
 
 Similarity:
 
-\[
+
+$$
 S=Z_IZ_T^\top
 \in\mathbb R^{B\times B}.
-\]
+$$
+
 
 Diagonal entries are positive pairs. Off-diagonal entries act as negatives.
 
@@ -325,9 +363,11 @@ A strong LLM already encodes language/reasoning structure.
 
 Instead of retraining both from scratch, learn an interface:
 
-\[
+
+$$
 P:\mathbb R^{d_v}\to\mathbb R^{d_{\rm LLM}}.
-\]
+$$
+
 
 This is analogous to learning a coordinate transformation between representation systems.
 
@@ -341,22 +381,26 @@ Vision encoders may produce hundreds/thousands of tokens. Sending all into an LL
 
 A resampler can compress:
 
-\[
+
+$$
 N_v\text{ visual tokens}
 \rightarrow
 M\text{ latent tokens},
 \qquad M\ll N_v.
-\]
+$$
 
-Cross-attention from learned queries \(Q_l\) to image features:
 
-\[
+Cross-attention from learned queries $Q_l$ to image features:
+
+
+$$
 H=
 \mathrm{softmax}
 \left(
 \frac{Q_lK_v^\top}{\sqrt d}
 \right)V_v.
-\]
+$$
+
 
 This creates a fixed-size visual summary.
 
@@ -410,9 +454,11 @@ So VLM evaluation should distinguish:
 
 Suppose language model prior says:
 
-\[
+
+$$
 p(\text{common object}|\text{text context})
-\]
+$$
+
 
 is high, but visual evidence is weak.
 
@@ -469,20 +515,24 @@ The text-only baseline is important. Otherwise a model may answer from dataset p
 ### 1. Shared embedding
 CLIP style.
 
-\[
+
+$$
 I\rightarrow z_I,
 \quad
 T\rightarrow z_T.
-\]
+$$
+
 
 Best for matching/retrieval.
 
 ### 2. Visual prefix
 Project image tokens to LLM dimension and prepend:
 
-\[
+
+$$
 [\text{visual tokens};\text{text tokens}].
-\]
+$$
+
 
 LLM self-attention handles both.
 
@@ -499,23 +549,29 @@ Suppose ViT gives 576 tokens and LLM prompt has 1024 text tokens.
 
 Concatenated context:
 
-\[
+
+$$
 T=1600.
-\]
+$$
+
 
 Dense attention cost depends on
 
-\[
+
+$$
 T^2=2.56\times10^6.
-\]
+$$
+
 
 Compress image to 64 tokens:
 
-\[
+
+$$
 T=1088,
 \qquad
 T^2\approx1.18\times10^6.
-\]
+$$
+
 
 Visual compression can nearly halve total attention pair count in this example.
 
@@ -525,11 +581,13 @@ This is why VLM architecture cares deeply about visual token count.
 
 ## Multi-image and video inputs
 
-For \(F\) frames, naive token count:
+For $F$ frames, naive token count:
 
-\[
+
+$$
 N_{\rm total}=F N_{\rm frame}.
-\]
+$$
+
 
 Video quickly becomes expensive.
 
@@ -548,15 +606,19 @@ This creates a bridge from VLMs to video/world models.
 
 Contrastive:
 
-\[
+
+$$
 \text{align}(I,T).
-\]
+$$
+
 
 Generative:
 
-\[
+
+$$
 p(T|I).
-\]
+$$
+
 
 Contrastive objectives learn global compatibility. Generative objectives train detailed conditional language generation.
 
@@ -665,43 +727,54 @@ This is enough to credibly discuss multimodal fine-tuning without training a gia
 
 Text:
 
-\[
+
+$$
 H_t\in\mathbb R^{B\times T\times d}.
-\]
+$$
+
 
 Vision:
 
-\[
+
+$$
 H_v\in\mathbb R^{B\times N_v\times d}.
-\]
+$$
+
 
 Text queries vision:
 
-\[
-Q_t\in\mathbb R^{B\times h\times T\times d_h},
-\]
 
-\[
+$$
+Q_t\in\mathbb R^{B\times h\times T\times d_h},
+$$
+
+
+$$
 K_v,V_v
 \in
 \mathbb R^{B\times h\times N_v\times d_h}.
-\]
+$$
+
 
 Score:
 
-\[
+
+$$
 Q_tK_v^\top
 \in
 \mathbb R^{B\times h\times T\times N_v}.
-\]
+$$
+
 
 Notice complexity is
 
-\[
-O(TN_vd),
-\]
 
-not \(O((T+N_v)^2d)\) for this isolated cross-attention operation.
+$$
+O(TN_vd),
+$$
+
+
+not $O((T+N_v)^2d)$ for this isolated cross-attention operation.
 
 This is one reason architectures may keep modalities separate rather than concatenate every token into full self-attention.
 
