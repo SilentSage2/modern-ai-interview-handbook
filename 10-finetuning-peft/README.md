@@ -12,14 +12,46 @@ Many job descriptions explicitly ask for experience adapting pretrained models; 
 - Derive LoRA and understand rank, alpha, target modules, and merging.
 - Explain QLoRA, catastrophic forgetting, and fine-tuning vs RAG.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **PEFT** | Parameter-Efficient Fine-Tuning | Adapts only a small parameter subset/addition. |
+| **LoRA** | Low-Rank Adaptation | Represents weight updates with low-rank factors. |
+| **QLoRA** | Quantized LoRA | LoRA over a quantized frozen base model. |
+| **SFT** | Supervised Fine-Tuning | Supervised adaptation on target responses. |
+| **RAG** | Retrieval-Augmented Generation | Supplies external knowledge through context. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Fine-tuning controls how far the pretrained solution can move
+
+Full fine-tuning changes all parameters; PEFT restricts adaptation to a smaller structured subspace. LoRA is both a systems optimization and a modeling prior on the update.
+
+### LoRA saves training state, not all memory
+
+Frozen base weights avoid parameter gradients/optimizer moments, but activations may still be required so gradients can reach adapters.
+
+### Use the cheapest adaptation mechanism that solves the problem
+
+Prompting handles already-present capability, RAG supplies external knowledge, PEFT changes behavior/domain mapping, and full fine-tuning is for stronger model-wide changes.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Linear probing vs partial vs full fine-tuning
 - Catastrophic forgetting and domain adaptation
 - Adapters
-- LoRA: low-rank updates ΔW = BA
-- QLoRA and low-bit base models
-- PEFT tradeoffs: memory, throughput, storage, quality
+- Low-Rank Adaptation (LoRA): low-rank weight updates
+- Quantized Low-Rank Adaptation (QLoRA) and low-bit frozen base models
+- Parameter-Efficient Fine-Tuning (PEFT) tradeoffs: memory, throughput, storage, and quality
 - Target-module selection
 - Rank, alpha and dropout choices
 - Instruction tuning datasets and response-only loss masking

@@ -1,100 +1,165 @@
 # Transformers — Interview Q&A
 
-## Q1. Why divide attention logits by sqrt(d_k)?
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Short answer:** To keep dot-product variance controlled as head dimension grows, preventing softmax from becoming excessively saturated.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Do not memorize the wording; learn the reasoning structure.
 
-## Q2. Why is self-attention O(N^2) in sequence length?
+## Q1. Explain Q, K, and V and derive scaled dot-product attention.
 
-**Short answer:** The attention score matrix compares every query token with every key token, producing an N×N matrix.
+Let hidden states be `X` with shape `[B, T, d_model]`. Learned linear projections create queries, keys, and values.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+- **Query (Q):** what information this token is seeking.
+- **Key (K):** what information a candidate token advertises.
+- **Value (V):** what content should be transferred if that candidate receives attention.
 
-## Q3. What is the difference between prefill and decode?
+For one head:
 
-**Short answer:** Prefill processes the prompt in parallel and builds KV cache; decode generates new tokens autoregressively and repeatedly reads the cache.
+```math
+\operatorname{Attention}(Q,K,V)
+=
+\operatorname{softmax}
+\left(
+\frac{QK^\top}{\sqrt{d_k}}
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+\right)V.
+```
 
-## Practice rule
+`QK^T` creates compatibility scores; softmax converts them to weights; the weighted sum of V transfers information.
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+**Why divide by sqrt(d_k)?** A dot product of `d_k` roughly unit-variance terms has variance proportional to `d_k`. Scaling prevents logits from growing with head dimension and saturating softmax.
 
-## Extended Interview Q&A
+**Design idea.** Attention is content-dependent routing: connection weights depend on the current input rather than being fixed after training.
 
-### E1. Why do we need Q, K and V instead of only one embedding?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Separate projections let the model learn one representation for matching/selection and another for transmitted content. The query-key dot product decides where to look; the value determines what information is aggregated.
+---
 
-### E2. Why does multi-head attention help?
+## Q2. Why multi-head attention instead of one large head?
 
-**Answer:** It gives multiple learned projection subspaces and attention patterns in parallel. Different heads can specialize in different relations while keeping total model width manageable.
+A single head uses one projection space to represent all relationships. Multi-Head Attention (MHA) learns several Q/K/V projection spaces in parallel, allowing different relational patterns within the same layer.
 
-### E3. Attention vs FFN in a Transformer block?
+If model width is `d_model` and there are `h` heads, each head often uses `d_head = d_model / h`. Head outputs are concatenated and projected back to model width.
 
-**Answer:** Attention mixes information across token positions; the FFN independently transforms the feature channels of each token.
+**Important nuance.** Heads are allowed to specialize but are not guaranteed to have clean human-interpretable roles; some can be redundant.
 
-### E4. Why are Transformers permutation equivariant without positional encoding?
+**Systems connection.** Full MHA stores separate key/value states for each head. MQA and GQA reduce K/V head count to shrink inference cache memory.
 
-**Answer:** All token interactions depend only on pairwise content projections. Permuting input rows produces the same permutation in outputs unless position information is injected.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E5. What is RoPE's main mathematical advantage?
+---
 
-**Answer:** After position-dependent rotations, the query-key inner product depends on the relative position difference, so relative distance is naturally encoded in attention.
+## Q3. Why do Transformers need positional information, and what is RoPE?
 
-### E6. Why is decode often memory-bandwidth limited?
+Content-only self-attention is permutation equivariant: rearranging the input rearranges the outputs, but the model has no intrinsic notion of sequence order.
 
-**Answer:** Each decode step handles very few new tokens but must repeatedly read large model weights and KV cache, giving lower arithmetic intensity than prompt prefill.
+Rotary Position Embedding (RoPE) rotates query/key feature pairs by position-dependent angles. The central identity is:
 
-### E7. What does KV cache save?
+```math
+(R_m q)^\top(R_n k)
+=
+q^\top R_{n-m}k.
+```
 
-**Answer:** It avoids recomputing past keys and values at every autoregressive step. It reduces compute but adds memory proportional to layers × sequence length × KV heads × head dimension.
+The query-key interaction therefore depends naturally on relative position difference.
 
-### E8. What is GQA?
+**Design idea.** Instead of simply adding a positional vector to token content, RoPE changes the geometry of attention matching itself. This makes relative position information directly available in Q/K dot products.
 
-**Answer:** Grouped-query attention uses more query heads than key/value heads. Multiple query heads share each KV head, reducing KV cache memory while preserving more flexibility than single-head MQA.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E9. What does FlashAttention change?
+---
 
-**Answer:** It changes how exact attention is scheduled and tiled on GPU to reduce high-bandwidth-memory traffic. It does not fundamentally change the mathematical attention output.
+## Q4. How can Transformer training be parallel if generation is autoregressive?
 
+During training, the full target sequence is already known. A causal mask prevents each position from seeing future tokens, but all positions can still be evaluated in one batched matrix computation.
 
-## Whiteboard / drill questions
+At inference, token `t+1` does not exist until the model samples it, so new tokens must be generated sequentially.
 
-- Derive the scaling factor in attention from a variance argument.
-- Why does KV cache reduce compute but increase memory?
-- Why can prefill be compute-bound while decode is bandwidth-bound?
-- How do MHA, MQA and GQA change KV memory?
-- Why is FlashAttention exact rather than approximate?
-- How would attention shapes change under cross-attention?
+**Key distinction.**
+- Training is parallel across known positions.
+- Autoregressive inference is sequential across newly generated positions.
 
+This explains why Transformers removed the recurrent dependency bottleneck of RNN training while LLM decoding still has a sequential latency component.
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A1. Why might attention heads become redundant?
+---
 
-**Answer:** Multiple heads are not guaranteed to learn distinct functions. Optimization can produce correlated heads, and pruning studies often find some heads have limited marginal contribution. Multi-head structure provides capacity, not guaranteed semantic specialization.
+## Q5. What is the KV cache and why is it both helpful and expensive?
 
-### A2. What changes in cross-attention complexity?
+During autoregressive generation, keys and values for earlier tokens do not change. The Key–Value (KV) cache stores them once and appends only the new token's K/V at each step.
 
-**Answer:** If query length is Tq and context length is Tc, score complexity is O(Tq·Tc·d) rather than O(T²d). This matters in VLMs and encoder-decoder models where the two modalities/sequences have different lengths.
+**Benefit:** avoids recomputing past K/V, drastically reducing repeated computation.
 
-### A3. Why can long context hurt even if it fits in memory?
+**Cost:** memory grows with batch size, layer count, context length, number of K/V heads, head dimension, and bytes per value:
 
-**Answer:** More tokens increase compute and may dilute retrieval/attention. The model must also have been trained to use long-range information effectively; nominal context length is not equivalent to reliable long-context reasoning.
+```math
+M_{\mathrm{KV}}
+\propto
+2
+B
+L
+T
+H_{\mathrm{KV}}
+d_h
+\cdot
+\text{bytes}.
+```
 
-### A4. How would you verify a causal mask implementation?
+This is why Grouped-Query Attention (GQA), Multi-Query Attention (MQA), paged KV cache, and quantization are important in LLM serving.
 
-**Answer:** Create two sequences identical up to position t but different afterward. Outputs at positions ≤t should be unchanged. This is a stronger test than visually inspecting the triangular mask.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A5. Why can GQA preserve quality better than MQA?
+---
 
-**Answer:** GQA retains multiple K/V groups rather than forcing all query heads to share a single K/V representation, offering a middle point between full MHA expressiveness and MQA cache savings.
+## Q6. Prefill versus decode: why do they have different bottlenecks?
 
-<!-- ADVANCED_QA_END -->
+**Prefill** processes the entire prompt. It uses large matrix multiplications and dense attention over many tokens, exposing high parallelism and often substantial compute.
+
+**Decode** adds one token per sequence per step. Each step performs relatively little new arithmetic but repeatedly reads model weights and an increasingly large KV cache. This often makes decode memory-bandwidth limited.
+
+**Consequences.**
+- FlashAttention improves attention IO and is particularly valuable for large prompt attention.
+- Quantization can strongly help decode by reducing bytes read for weights.
+- Batching improves decode throughput by giving the GPU more simultaneous tokens.
+
+The two phases should be benchmarked separately.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. What is FlashAttention actually optimizing?
+
+FlashAttention computes the same exact dense attention result but changes the execution schedule. A naive implementation materializes large score/probability matrices in high-bandwidth GPU memory. FlashAttention tiles Q/K/V and performs online softmax accumulation using faster on-chip memory, reducing expensive memory traffic.
+
+**Key idea.** It is an IO-aware exact algorithm, not a sparse or low-rank approximation.
+
+**Interview trap.** FlashAttention does not change the mathematical dense pairwise interaction from quadratic to linear complexity. It makes the same computation much more hardware efficient.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. What is the role of the FFN compared with attention?
+
+Attention mixes information **across token positions**. The Feed-Forward Network (FFN) transforms feature channels **within each token**, using the same MLP at every position.
+
+A useful mental model is:
+
+```text
+attention = token mixing
+FFN       = feature/channel mixing
+```
+
+The FFN often contains a large fraction of Transformer parameters because it expands hidden width before projecting back. Modern models often use gated variants such as SwiGLU.
+
+**Design idea.** Attention decides where information should come from; the FFN transforms the gathered information into new features.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

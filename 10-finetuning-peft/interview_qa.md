@@ -1,81 +1,180 @@
 # Fine-Tuning, LoRA & PEFT — Interview Q&A
 
-## Q1. Full fine-tuning vs LoRA?
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Short answer:** Full FT updates all parameters; LoRA freezes base weights and learns low-rank update matrices, reducing trainable parameters, memory, and adapter storage.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Do not memorize the wording; learn the reasoning structure.
 
-## Q2. Why can low-rank adaptation work?
+## Q1. Full fine-tuning versus PEFT: what changes mathematically and operationally?
 
-**Short answer:** A useful hypothesis is that task-specific parameter updates lie in a much lower-dimensional subspace than the full weight matrix.
+Full fine-tuning allows every pretrained parameter to move. Parameter-Efficient Fine-Tuning (PEFT) restricts the update to a much smaller structured parameter set.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Conceptually:
 
-## Practice rule
+```math
+\theta^*
+=
+\theta_0+\Delta\theta.
+```
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+Full fine-tuning gives `Delta theta` freedom across the full model; PEFT constrains it.
 
-## Extended Interview Q&A
+**Operational consequence.** Frozen base weights do not need parameter gradients or optimizer moments, reducing training-state memory and task-specific checkpoint size.
 
-### E1. Why does LoRA reduce optimizer memory?
+**Statistical consequence.** The restriction can act as regularization. On small datasets, LoRA can sometimes match or outperform full fine-tuning because the latter has enough freedom to overfit.
 
-**Answer:** The frozen base parameters do not need trainable gradients or optimizer states; only the small A/B adapter matrices are optimized.
+The correct comparison therefore includes both systems cost and generalization.
 
-### E2. Does LoRA reduce inference compute automatically?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Not necessarily. If the adapter branch is evaluated separately it adds some work. If merged into the base weights for a fixed adapter, inference can use the merged matrix.
+---
 
-### E3. What does LoRA rank control?
+## Q2. Derive LoRA and explain why low rank is plausible.
 
-**Answer:** The rank bounds the dimensionality of the weight update. Higher rank increases adaptation capacity and parameter cost.
+For a pretrained linear layer `W`, Low-Rank Adaptation (LoRA) freezes `W` and parameterizes its update as:
 
-### E4. Why initialize one LoRA factor to zero?
+```math
+\Delta W
+=
+\frac{\alpha}{r}BA,
+```
 
-**Answer:** It ensures the initial update is exactly zero, so training begins from the original pretrained function.
+where rank `r` is much smaller than the matrix dimensions.
 
-### E5. When would full fine-tuning beat LoRA?
+The layer becomes:
 
-**Answer:** When the downstream distribution/behavior differs strongly and sufficient data/compute are available, full fine-tuning can exploit more adaptation capacity.
+```math
+y
+=
+Wx
++
+\frac{\alpha}{r}BAx.
+```
 
-### E6. When is RAG preferable to fine-tuning?
+Parameter count changes from `d_out × d_in` to `r(d_in + d_out)`.
 
-**Answer:** When the main need is fresh, proprietary, or frequently changing knowledge rather than changing the model's core behavior.
+**Key hypothesis.** Although the full network lives in a huge parameter space, the downstream task-specific update may have much lower intrinsic dimension.
 
+**Initialization idea.** If one LoRA factor starts at zero, the initial update is zero, so the adapted model initially reproduces the pretrained function exactly.
 
-## Whiteboard / drill questions
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-- Calculate LoRA parameters for a 4096×4096 matrix at ranks 8, 16, and 64.
-- Why can QLoRA fit a larger base model than LoRA alone?
-- When should you target MLP projections in addition to attention?
-- What evaluation proves fine-tuning did not destroy general capability?
-- Design a full-FT vs LoRA comparison that is scientifically fair.
+---
 
+## Q3. What does LoRA rank control, and how would you choose it?
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+Rank `r` bounds the maximum rank and therefore the capacity of the update.
 
-### A1. Why can LoRA rank be different across layers?
+- Small `r`: fewer trainable parameters, lower memory, stronger regularization.
+- Large `r`: more adaptation capacity, more memory/compute.
 
-**Answer:** Different layers may require different adaptation capacity. A fixed global rank is convenient but not theoretically necessary; rank patterns can allocate capacity where updates are more complex.
+There is no universal correct rank. Treat it as a capacity hyperparameter and validate it under the actual domain shift.
 
-### A2. Does freezing parameters mean no activation memory is needed through them?
+A convincing experiment sweeps a small set of ranks while keeping data split and evaluation fixed, then reports:
+- target metric;
+- trainable parameters;
+- peak GPU memory;
+- training time;
+- retention/general-capability metric.
 
-**Answer:** No. If gradients must flow through a frozen layer to reach trainable adapters later/inside the network, activations or recomputation may still be needed. Freezing mainly removes parameter gradients and optimizer state for those weights.
+This demonstrates why a chosen rank is justified rather than copied from a tutorial.
 
-### A3. How do you detect catastrophic forgetting?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Evaluate both the new target task and representative pretraining/general capabilities before and after adaptation. A target-task gain with broad regression is a forgetting signal.
+---
 
-### A4. Why might LoRA outperform full FT on small data?
+## Q4. What is QLoRA and why does it save more memory than LoRA alone?
 
-**Answer:** The low-rank constraint can act as regularization and preserve pretrained structure, while full FT has enough degrees of freedom to overfit. This is data-regime dependent, not universal.
+LoRA freezes the base model but normally still stores those frozen weights at a relatively high precision. Quantized LoRA (QLoRA) additionally stores the frozen base in a low-bit representation while training LoRA adapters in a training-friendly precision.
 
-### A5. What is the difference between PEFT and quantization?
+The techniques attack different memory terms:
+- **LoRA:** reduces trainable gradients and optimizer state.
+- **Quantization:** reduces frozen base-weight storage.
 
-**Answer:** PEFT reduces or structures the trainable parameter set; quantization reduces numerical precision/storage. QLoRA combines both: quantized frozen base plus trainable low-rank adapters.
+This makes it possible to adapt a much larger model on the same GPU memory.
 
-<!-- ADVANCED_QA_END -->
+**Important nuance.** Quantization introduces approximation and kernel/data-type constraints. QLoRA is not simply “LoRA with a smaller rank.”
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q5. How do you choose LoRA target modules?
+
+Transformer candidates include query/key/value/output attention projections and MLP projections.
+
+The design question is: **where does the downstream task need adaptation capacity?**
+
+- Attention-only adapters can change routing and relational interactions cheaply.
+- Adding MLP projections changes feature transformations more broadly.
+- Very narrow targeting may underfit a large domain shift.
+
+A strong project should report the exact target modules, rank, alpha, dropout, learning rate, sequence length, and trainable parameter count.
+
+There is no universally optimal module list; it should be treated as an architecture/hyperparameter choice.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q6. How do you detect catastrophic forgetting?
+
+Evaluate both the target task and representative original/general capabilities before and after adaptation.
+
+If target performance improves but unrelated/general tasks regress strongly, the model has forgotten broad behavior.
+
+Mitigation includes:
+- smaller learning rate;
+- PEFT instead of full fine-tuning;
+- mixing general/pretraining-like data;
+- regularization to a reference;
+- freezing lower layers;
+- early stopping.
+
+**Key point.** Target validation alone cannot reveal forgetting. A retention evaluation suite is necessary if preserving broad model capability matters.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. Fine-tuning versus RAG: when should you use which?
+
+Retrieval-Augmented Generation (RAG) changes the **context**; fine-tuning changes the **parameters**.
+
+Use RAG when the primary issue is missing, proprietary, fresh, or frequently changing knowledge. Use fine-tuning when the model needs a new behavior, style, output format, domain mapping, or task competence.
+
+They are complementary. A domain assistant can use LoRA to learn how to follow a workflow while using RAG to retrieve current documentation.
+
+A useful interview shorthand is: **fine-tuning teaches how to behave; RAG supplies what to know right now**, while acknowledging that real systems can have overlap.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. What would a convincing fine-tuning project report?
+
+A strong report includes:
+- pretrained checkpoint;
+- dataset size and split;
+- chat/prompt format;
+- trainable modules;
+- optimizer and learning rate;
+- precision;
+- batch and sequence length;
+- peak GPU memory;
+- training time;
+- task metric;
+- retention/generalization metric;
+- failure examples.
+
+At minimum compare a frozen baseline and LoRA; include full fine-tuning if compute permits.
+
+The goal is to show that “fine-tuning experience” means understanding data formatting, optimization, parameter efficiency, systems cost, evaluation, and failure modes—not only calling a PEFT library function.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

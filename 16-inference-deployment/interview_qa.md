@@ -1,81 +1,145 @@
 # Inference, TensorRT & Deployment — Interview Q&A
 
-## Q1. Latency vs throughput?
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Short answer:** Latency measures time per request; throughput measures work completed per unit time. Batching often improves throughput while potentially increasing per-request latency.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Do not memorize the wording; learn the reasoning structure.
 
-## Q2. What does TensorRT optimize?
+## Q1. What does TensorRT do that eager PyTorch does not?
 
-**Short answer:** It compiles and optimizes inference graphs using tactics such as kernel selection/fusion, precision choices, memory planning, and hardware-specific execution.
+NVIDIA TensorRT is an inference compiler/runtime. Eager PyTorch must remain flexible for Python execution and many model behaviors; TensorRT can specialize an evaluation graph for target hardware, chosen precision, and expected shape ranges.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Typical optimizations include:
+- operator/kernel fusion;
+- tactic or kernel selection;
+- tensor-layout choices;
+- memory planning;
+- lower precision;
+- constant folding.
 
-## Practice rule
+**Key idea.** TensorRT is not another training framework. It trades general execution flexibility for highly specialized inference efficiency.
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-## Extended Interview Q&A
+---
 
-### E1. Why can TensorRT be faster than eager PyTorch?
+## Q2. Why does operator fusion improve inference?
 
-**Answer:** It can compile a fixed/known graph, fuse operators, choose optimized kernels/tactics, plan memory, and exploit lower precision more aggressively.
+Separate operations such as linear → bias → activation may launch separate GPU kernels and write/read intermediate tensors through high-bandwidth memory.
 
-### E2. PTQ vs QAT?
+A fused kernel can keep intermediate values closer to registers/shared/on-chip memory and reduce launch overhead.
 
-**Answer:** PTQ quantizes after training using calibration; QAT exposes the model to simulated quantization during training for better robustness.
+The mathematical FLOPs may barely change. The speedup often comes from **less memory traffic and fewer kernel launches**.
 
-### E3. Why does weight-only quantization help LLM decode?
+This is a general systems lesson: wall-clock performance depends on data movement and scheduling, not only the number of arithmetic operations.
 
-**Answer:** Decode repeatedly streams large weights for few new tokens, so reducing weight bytes can relieve memory-bandwidth pressure.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E4. What is continuous batching?
+---
 
-**Answer:** The server dynamically adds/removes requests at token-step boundaries instead of forcing a fixed batch to finish together.
+## Q3. PTQ versus QAT: what is the difference?
 
-### E5. Why use paged KV cache?
+Post-Training Quantization (PTQ) quantizes an already trained model, usually using representative calibration data to estimate ranges/scales. It is inexpensive but may hurt accuracy in sensitive networks.
 
-**Answer:** Paged allocation reduces fragmentation and makes variable-length, dynamically arriving sequences easier to manage efficiently.
+Quantization-Aware Training (QAT) simulates quantization effects during training so parameters adapt to the approximation. It costs extra training but can recover more accuracy.
 
-### E6. How should GPU inference latency be measured?
+**Design decision.** Try PTQ first when the model is robust; use QAT if accuracy degradation is unacceptable.
 
-**Answer:** Warm up, synchronize around timed regions, fix shapes/precision, run many iterations, and report distribution statistics plus hardware/software context.
+Always report downstream task metrics as well as tensor-level numerical error.
 
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-## Whiteboard / drill questions
+---
 
-- Why can an optimized engine differ numerically from eager output?
-- How can dynamic shapes reduce optimization opportunities?
-- Why does weight quantization help decode throughput?
-- How do paged KV cache and continuous batching solve different problems?
-- Design a fair PyTorch vs TensorRT benchmark.
+## Q4. Why can weight-only quantization help LLM decode so much?
 
+Autoregressive decode often has low arithmetic intensity: each step processes only a few new tokens while reading very large weight matrices and KV cache.
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+If weights are stored at fewer bits, fewer bytes must be read from memory for the same logical computation. This can reduce bandwidth pressure and free GPU memory for larger batches or longer contexts.
 
-### A1. Why can lower precision improve latency beyond memory savings?
+**Key idea.** The benefit is not merely a smaller model file. In a bandwidth-bound workload, reducing memory traffic directly increases tokens per second.
 
-**Answer:** It reduces data movement and may unlock specialized tensor-core instructions with higher throughput. Actual benefit depends on kernel support and workload shape.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A2. What is tail latency?
+---
 
-**Answer:** High-percentile latency such as p95/p99. Online systems care because a small fraction of very slow requests can dominate user experience or SLA violations.
+## Q5. What are dynamic shapes and why do they complicate optimization?
 
-### A3. Why should engine build time be reported separately from inference time?
+Production requests can vary in batch size, image resolution, or sequence length. TensorRT can use optimization profiles specifying minimum, optimal, and maximum shapes.
 
-**Answer:** Compilation/tactic search is usually an offline cost. Mixing it into steady-state inference obscures actual serving performance.
+Static shapes let the compiler specialize aggressively. Broad dynamic ranges require kernels and memory plans that work across many possibilities and may reduce specialization.
 
-### A4. When is INT8 PTQ likely to fail?
+A deployment benchmark should therefore state shape profiles and test the relevant min/opt/max cases instead of measuring only one convenient input shape.
 
-**Answer:** When activation/weight distributions are difficult to represent with chosen scales or calibration data are unrepresentative, causing large quantization error in sensitive layers.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A5. Why can larger batches hurt an online service despite higher throughput?
+---
 
-**Answer:** Requests may wait longer to form or complete a batch, increasing queueing and tail latency. Throughput and latency objectives conflict.
+## Q6. What are paged KV cache and continuous batching, and how are they different?
 
-<!-- ADVANCED_QA_END -->
+**Paged KV cache** is a memory-management technique. It stores each sequence's key/value states in fixed-size blocks rather than requiring one large contiguous allocation, reducing fragmentation and supporting dynamic growth.
+
+**Continuous batching** is a scheduling technique. When some sequences finish decoding, their execution slots can be reused by newly arrived requests while others continue.
+
+They solve different problems:
+- paging → memory allocation and fragmentation;
+- continuous batching → utilization under variable sequence lengths.
+
+Together they are central to high-throughput LLM serving.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. Latency versus throughput: how do you benchmark correctly?
+
+Latency is time per request; throughput is work completed per unit time. Larger batches often improve throughput but can increase queueing and per-request latency.
+
+For GPU timing:
+- warm up first;
+- synchronize around timed regions;
+- fix precision and input shape;
+- run enough iterations;
+- report p50/p95/p99 for online systems.
+
+For LLMs also distinguish:
+- Time To First Token (TTFT);
+- inter-token latency;
+- total generation time;
+- tokens per second.
+
+A fair PyTorch-versus-TensorRT comparison must use the same workload and correctness tolerance.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. How do you validate correctness after conversion or quantization?
+
+Measure both numerical agreement and task-level behavior.
+
+One useful metric is relative L2 error:
+
+```math
+e_{\mathrm{rel}}
+=
+\frac{
+\|y_{\mathrm{optimized}}-y_{\mathrm{baseline}}\|_2
+}{
+\|y_{\mathrm{baseline}}\|_2+\epsilon
+}.
+```
+
+Also report max absolute error.
+
+But final correctness should be application-specific: classification agreement, Dice score, reconstruction error, generated-token quality, or another downstream metric.
+
+**Key idea.** Faster wrong output is not optimization. Conversion and quantization must be validated under the same input distribution and shape ranges used in deployment.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

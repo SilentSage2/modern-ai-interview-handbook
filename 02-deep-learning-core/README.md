@@ -12,6 +12,38 @@ This chapter is the common language behind CNNs, Transformers, diffusion models,
 - Reason about vanishing/exploding gradients and residual connections.
 - Compare normalization, initialization, and mixed-precision choices.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **MLP** | Multi-Layer Perceptron | Feed-forward neural network. |
+| **BatchNorm** | Batch Normalization | Normalizes channels using batch/spatial statistics. |
+| **LayerNorm** | Layer Normalization | Normalizes hidden features within each sample/token. |
+| **BF16** | Brain Floating Point 16 | 16-bit format with wide exponent range. |
+| **FP16** | 16-bit floating point | Half precision widely used on GPUs. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Deep learning is a representation-and-optimization problem
+
+A deep network composes many nonlinear transformations. Expressivity alone is insufficient: gradients must propagate and optimization must stay numerically well conditioned. Residual connections, normalization, initialization, and learning-rate design largely exist for this reason.
+
+### Residual connections turn layers into iterative refinements
+
+Instead of replacing a representation completely, a residual block learns a correction `x + F(x)`. The identity path helps information and gradients flow through very deep stacks.
+
+### Normalization controls internal scale
+
+BatchNorm, LayerNorm, and RMSNorm normalize along different axes. The design question is which statistics are stable and available in the architecture and deployment regime.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - MLP, activation functions, universal approximation intuition

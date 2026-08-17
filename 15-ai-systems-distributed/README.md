@@ -12,6 +12,40 @@ Modern AI interviews increasingly test whether candidates understand where GPU m
 - Compare data/tensor/pipeline parallelism and FSDP/ZeRO.
 - Reason about arithmetic intensity, batching, mixed precision, and checkpointing.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **GPU** | Graphics Processing Unit | Parallel accelerator. |
+| **HBM** | High-Bandwidth Memory | Fast accelerator-attached memory. |
+| **DDP** | Distributed Data Parallel | Replicated model plus gradient synchronization. |
+| **FSDP** | Fully Sharded Data Parallel | Shards training states across workers. |
+| **ZeRO** | Zero Redundancy Optimizer | Optimizer/model-state sharding family. |
+| **NCCL** | NVIDIA Collective Communications Library | GPU collective communication library. |
+| **BF16** | Brain Floating Point 16 | Wide-range 16-bit format. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Performance starts by identifying the bottleneck
+
+A workload can be compute-bound, bandwidth-bound, communication-bound, or input-pipeline-bound. More GPUs or lower precision help only if they attack the dominant term.
+
+### Distributed methods trade memory/compute for communication
+
+Data parallelism, tensor parallelism, pipeline parallelism, FSDP, and ZeRO solve different scalability problems and introduce different communication patterns.
+
+### Memory accounting tells you what optimization to use
+
+Parameters, gradients, optimizer states, activations, KV cache, and workspaces scale differently; identify the dominant term before choosing checkpointing, sharding, quantization, or batching.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - GPU memory hierarchy and bandwidth
@@ -20,8 +54,8 @@ Modern AI interviews increasingly test whether candidates understand where GPU m
 - Data parallelism
 - Tensor parallelism
 - Pipeline parallelism
-- DDP, FSDP and ZeRO concepts
-- NCCL and collective communication
+- Distributed Data Parallel (DDP), Fully Sharded Data Parallel (FSDP), and Zero Redundancy Optimizer (ZeRO) concepts
+- NVIDIA Collective Communications Library (NCCL) and collective communication
 - Gradient accumulation and checkpointing
 - Profiling compute vs memory bottlenecks
 - Throughput vs latency

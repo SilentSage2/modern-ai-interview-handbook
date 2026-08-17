@@ -12,6 +12,38 @@ ViT is the main bridge from classical computer vision to multimodal foundation m
 - Explain CLS token, positional embeddings, MAE, DINO, CLIP, and SAM.
 - Compare ViT and CNN inductive biases and fine-tuning behavior.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **ViT** | Vision Transformer | Transformer over patch tokens. |
+| **MAE** | Masked Autoencoder | Reconstructs masked image patches for self-supervision. |
+| **DINO** | Self-Distillation with No Labels | Teacher–student self-supervised vision learning. |
+| **CLIP** | Contrastive Language–Image Pretraining | Aligns image/text embeddings. |
+| **SAM** | Segment Anything Model | Promptable segmentation foundation model. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### ViT makes an image look like a token sequence
+
+Patch embedding converts an image into visual tokens so Transformer machinery can be reused. Patch size is therefore both a resolution and compute decision.
+
+### Self-supervised objectives define the visual representation
+
+MAE reconstructs masked content, DINO aligns representations across views, and CLIP aligns images with language. Their downstream strengths reflect those different training targets.
+
+### Foundation-model status comes from transfer, not architecture
+
+A ViT trained narrowly for one task is still task-specific. A vision foundation model should show broad pretraining and adaptation across tasks/domains/interfaces.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Patchification and patch embeddings
@@ -19,10 +51,10 @@ ViT is the main bridge from classical computer vision to multimodal foundation m
 - ViT encoder architecture
 - ViT vs CNN inductive bias
 - Patch size vs compute/resolution
-- MAE-style masked image modeling
-- DINO/self-distillation style representation learning
-- CLIP-style vision-language alignment
-- SAM-style promptable vision foundation models
+- Masked Autoencoder (MAE)-style masked image modeling
+- DINO (Self-Distillation with No Labels)-style representation learning
+- Contrastive Language–Image Pretraining (CLIP)-style vision–language alignment
+- Segment Anything Model (SAM)-style promptable vision foundation models
 - Fine-tuning and linear probing of pretrained vision encoders
 
 

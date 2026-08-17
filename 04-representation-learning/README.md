@@ -12,11 +12,43 @@ Foundation models depend on learning transferable representations before downstr
 - Explain InfoNCE and contrastive learning.
 - Understand representation collapse and self-supervised learning.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **VAE** | Variational Autoencoder | Probabilistic latent-variable representation model. |
+| **ELBO** | Evidence Lower Bound | Trainable lower bound on log-likelihood. |
+| **KL** | Kullback–Leibler divergence | Distribution discrepancy used in variational inference. |
+| **SSL** | Self-Supervised Learning | Creates supervision from raw data. |
+| **InfoNCE** | Contrastive objective | Scores positive pairs above negative candidates. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### The target is a useful representation, not reconstruction itself
+
+Representation learning decides which information should be preserved and which nuisance variation should be ignored. Different self-supervised objectives impose different invariances.
+
+### Contrastive learning creates a semantic geometry
+
+InfoNCE makes related views close and competing examples farther apart. The deeper design choices are how positives, negatives, and augmentations define similarity.
+
+### A VAE balances information and regularity
+
+The reconstruction term preserves input information; the KL term regularizes latents toward a simple prior so sampling/interpolation remain meaningful.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Autoencoders and bottleneck representations
-- Variational autoencoders and ELBO
-- Contrastive learning and InfoNCE
+- Variational Autoencoders (VAEs) and the Evidence Lower Bound (ELBO)
+- Contrastive learning and the InfoNCE contrastive objective
 - Positive/negative pairs and representation collapse
 - Masked modeling
 - Metric learning and embedding geometry

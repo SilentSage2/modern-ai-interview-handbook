@@ -12,14 +12,47 @@ Diffusion is already a strength, so this chapter is organized as a concise but r
 - Connect epsilon prediction to score estimation.
 - Explain DDIM, CFG, SDE/ODE views, latent diffusion, and DiT.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **DDPM** | Denoising Diffusion Probabilistic Model | Learns to reverse Gaussian noising. |
+| **DDIM** | Denoising Diffusion Implicit Model | Alternative deterministic/fewer-step sampler. |
+| **SDE** | Stochastic Differential Equation | Continuous-time stochastic diffusion formulation. |
+| **ODE** | Ordinary Differential Equation | Deterministic probability-flow formulation. |
+| **CFG** | Classifier-Free Guidance | Strengthens conditioning using conditional/unconditional predictions. |
+| **DiT** | Diffusion Transformer | Transformer denoiser for diffusion. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Diffusion replaces one hard generation problem with many easier denoising problems
+
+The forward process gradually destroys structure until the distribution is simple. The model learns local reverse steps, creating a path from noise back to data.
+
+### Noise prediction is a convenient parameterization, not the goal
+
+Predicting epsilon is useful because Gaussian corruption makes it analytically related to the score. x0 and v parameterizations encode similar reverse information with different conditioning.
+
+### Sampler and learned model are partly separate
+
+DDIM and ODE-style solvers can change how the learned denoising field is integrated at inference without requiring a completely new network.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Forward noising and reverse denoising
-- DDPM objective and epsilon/x0/v prediction
+- Denoising Diffusion Probabilistic Model (DDPM) objective and epsilon / x0 / v parameterizations
 - Score matching
-- DDIM and non-Markovian sampling
-- SDE/ODE views of diffusion
-- Conditional diffusion and classifier-free guidance
+- Denoising Diffusion Implicit Model (DDIM) and alternative sampling
+- Stochastic Differential Equation (SDE) and Ordinary Differential Equation (ODE) views of diffusion
+- Conditional diffusion and Classifier-Free Guidance (CFG)
 - Latent diffusion
 - Diffusion Transformers (DiT)
 - Posterior sampling / inverse problems

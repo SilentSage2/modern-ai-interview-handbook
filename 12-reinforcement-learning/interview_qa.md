@@ -1,81 +1,203 @@
 # Reinforcement Learning — Interview Q&A
 
-## Q1. What is the advantage function?
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Short answer:** A(s,a)=Q(s,a)-V(s); it measures how much better an action is than the state's baseline value.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Do not memorize the wording; learn the reasoning structure.
 
-## Q2. Why does PPO clip the policy ratio?
+## Q1. What is an MDP and why is the Markov property important?
 
-**Short answer:** To discourage overly large policy updates and improve optimization stability while retaining a simple first-order objective.
+A Markov Decision Process (MDP) contains states, actions, transition dynamics, rewards, and a discount factor. The Markov property says the current state contains all history needed to predict the next-state distribution under an action:
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+```math
+p(s_{t+1}|s_{0:t},a_{0:t})
+=
+p(s_{t+1}|s_t,a_t).
+```
 
-## Practice rule
+**Why it matters.** Bellman recursion assumes the state is sufficient. If the raw observation is only partial, the policy or world model may need history or a learned latent state such as:
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+```math
+z_t
+=
+f(o_{0:t},a_{0:t-1}).
+```
 
-## Extended Interview Q&A
+This explicit range notation is used in the handbook because it is both mathematically unambiguous and more robust in GitHub rendering.
 
-### E1. Why can subtracting a baseline reduce variance without bias?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Because the expectation of score-function gradient times an action-independent baseline is zero: E_a[∇logπ(a|s)b(s)] = b(s)∇Σ_aπ(a|s)=0.
+---
 
-### E2. What is the difference between Q and advantage?
+## Q2. V, Q, and advantage: what does each quantity mean?
 
-**Answer:** Q measures expected return after taking an action; advantage subtracts the state's average/baseline value and measures relative benefit.
+State value is expected return from state `s` under policy `pi`:
 
-### E3. Why use a target network in DQN?
+```math
+V^\pi(s)
+=
+\mathbb E_\pi[G_t|s_t=s].
+```
 
-**Answer:** If the same rapidly changing network defines both prediction and target, the regression target moves too quickly and destabilizes learning.
+Action value asks what happens if action `a` is chosen first:
 
-### E4. Why use replay buffer?
+```math
+Q^\pi(s,a)
+=
+\mathbb E_\pi[G_t|s_t=s,a_t=a].
+```
 
-**Answer:** It reuses experience and breaks temporal correlation between consecutive samples, making optimization more data-efficient and closer to i.i.d.
+Advantage compares that action with the policy's normal baseline:
 
-### E5. What does GAE lambda do?
+```math
+A^\pi(s,a)
+=
+Q^\pi(s,a)-V^\pi(s).
+```
 
-**Answer:** It interpolates between low-variance one-step TD estimates and higher-variance longer-horizon return estimates.
+**Key idea.** Advantage tells the actor whether the sampled action was better or worse than expected for that state. Subtracting the state baseline also reduces variance in policy-gradient estimates.
 
-### E6. Why does PPO need old policy probabilities?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** The probability ratio measures how much the current policy changed for sampled actions relative to the behavior policy that generated the data.
+---
 
+## Q3. Explain Bellman recursion intuitively.
 
-## Whiteboard / drill questions
+The return decomposes into immediate reward plus discounted future return:
 
-- Derive policy gradient from trajectory probability.
-- Why does an action-independent baseline preserve unbiasedness?
-- Monte Carlo vs TD: explain bias and variance.
-- Why is PPO on-policy?
-- What failure happens if PPO reuses old rollouts too long?
+```math
+G_t
+=
+r_t+\gamma G_{t+1}.
+```
 
+Taking expectation gives a Bellman equation:
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+```math
+V^\pi(s)
+=
+\mathbb E[
+r_t+\gamma V^\pi(s_{t+1})
+].
+```
 
-### A1. Why is the Markov assumption important for Bellman equations?
+**Key idea.** A long-horizon decision problem can be written recursively as a one-step reward plus the value of what remains.
 
-**Answer:** Bellman recursion assumes the current state is sufficient to predict future return distribution under action/policy. If relevant history is missing, value functions over the observation alone may be inconsistent.
+Dynamic programming, Temporal-Difference learning, Q-learning, and critic training all exploit this recursion. The formula is the mathematical reason bootstrapping from a next-state value estimate is possible.
 
-### A2. Why can reward shaping be dangerous?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** The agent optimizes the specified numerical reward, which may contain loopholes. A shaped proxy can be easier to exploit than the intended task objective.
+---
 
-### A3. Why does off-policy learning need care under distribution shift?
+## Q4. Q-learning versus policy gradient: what is fundamentally different?
 
-**Answer:** The learner evaluates or improves actions/states that may be weakly represented under behavior data. Estimation errors can be amplified, especially through bootstrapping/max operations.
+Q-learning estimates how good state–action pairs are. The policy can be derived by choosing actions with the largest Q value. It is naturally off-policy because the target can use a greedy max even when data were collected by another behavior policy.
 
-### A4. What is the role of the critic in actor-critic?
+Policy-gradient methods directly parameterize an action distribution `pi_theta(a|s)` and differentiate expected return with respect to the policy parameters.
 
-**Answer:** The critic estimates value/advantage to reduce variance and provide a learning signal for the actor. It does not choose the action directly in the standard actor-critic decomposition.
+**Tradeoff.**
+- Value-based methods reuse data efficiently and are natural for discrete actions.
+- Policy gradients handle stochastic and continuous actions naturally but often have high-variance estimates and use on-policy data.
 
-### A5. Why are multiple seeds important in RL?
+Actor–critic combines a policy actor with a learned value critic.
 
-**Answer:** Training and environment interaction are stochastic and return variance can be high. A single seed can give a misleading conclusion about algorithm quality.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-<!-- ADVANCED_QA_END -->
+---
+
+## Q5. Derive the policy-gradient idea.
+
+Trajectory probability depends on the policy's action probabilities. Using the log-derivative trick gives:
+
+```math
+\nabla_\theta J
+=
+\mathbb E
+\left[
+\sum_t
+\nabla_\theta
+\log\pi_\theta(a_t|s_t)
+G_t
+\right].
+```
+
+Subtracting an action-independent baseline such as `V(s_t)` preserves the expectation but reduces variance, producing an advantage-weighted gradient.
+
+**Intuition.**
+- Positive advantage: increase the sampled action's log probability.
+- Negative advantage: decrease it.
+
+This turns delayed reward into a gradient signal over action probabilities without differentiating through the environment transition itself.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q6. What is GAE and why use it?
+
+Generalized Advantage Estimation (GAE) combines multiple Temporal-Difference residuals:
+
+```math
+\hat A_t
+=
+\sum_{\ell=0}^{\infty}
+(\gamma\lambda)^\ell
+\delta_{t+\ell}.
+```
+
+The parameter `lambda` controls a bias–variance tradeoff.
+
+- Smaller lambda relies more on bootstrapped value estimates: lower variance, more bias.
+- Larger lambda approaches longer Monte Carlo returns: lower bias, higher variance.
+
+GAE is popular with PPO because policy-gradient optimization benefits from a low-variance but reasonably accurate advantage signal.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. What is PPO clipping actually doing?
+
+Proximal Policy Optimization (PPO) compares the probability of a sampled action under the new and old policies:
+
+```math
+r_t(\theta)
+=
+\frac{
+\pi_\theta(a_t|s_t)
+}{
+\pi_{\theta_{\mathrm{old}}}(a_t|s_t)
+}.
+```
+
+The clipped objective removes additional incentive once this ratio moves too far from one.
+
+**Intuition.**
+- Positive advantage: increase action probability, but not excessively.
+- Negative advantage: decrease it, but not excessively.
+
+This helps avoid destructive policy updates and keeps recently collected on-policy data useful for a few minibatch epochs. PPO is a practical update-control mechanism, not a perfect trust-region guarantee.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. On-policy versus off-policy: why does it matter?
+
+On-policy algorithms learn from trajectories generated by the current or very recent policy. PPO is primarily on-policy.
+
+Off-policy algorithms such as Q-learning can learn from data generated by another behavior policy and therefore reuse replay more aggressively.
+
+**Tradeoff.**
+- Off-policy learning is data efficient but faces behavior/target distribution mismatch.
+- On-policy learning avoids severe mismatch but requires fresh interaction.
+
+This distinction matters in RLHF, offline RL, robotics, and world-model settings where collecting new data can be expensive.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

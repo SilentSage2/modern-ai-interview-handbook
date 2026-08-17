@@ -12,17 +12,51 @@ Deployment experience requires understanding inference graphs, quantization, bat
 - Understand PTQ/QAT, weight-only quantization, dynamic shapes, and operator fusion.
 - Reason about LLM serving, paged KV cache, continuous batching, latency, and throughput.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **TensorRT** | NVIDIA TensorRT | Inference compiler/runtime. |
+| **ONNX** | Open Neural Network Exchange | Portable computation graph format. |
+| **PTQ** | Post-Training Quantization | Quantize after training. |
+| **QAT** | Quantization-Aware Training | Train while simulating quantization. |
+| **TTFT** | Time To First Token | Latency until first generated token. |
+| **KV cache** | Key–Value cache | Stored past attention states in LLM inference. |
+| **p95 / p99** | 95th / 99th latency percentile | Tail-latency statistics. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Inference optimization specializes execution
+
+Deployment runtimes can assume evaluation-only behavior, shape ranges, precision, and target hardware, enabling fusion, tactic selection, and memory planning.
+
+### Latency and throughput are different objectives
+
+Batching often improves throughput while increasing queueing or per-request latency. Production serving chooses a point on that tradeoff.
+
+### Quantization is a controlled approximation
+
+Lower precision reduces bytes and may unlock faster hardware, but introduces numerical error. Speed and correctness must be measured together.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Inference graph optimization
 - PyTorch eager vs compiled/deployment engines
-- ONNX concepts
+- Open Neural Network Exchange (ONNX) concepts
 - TensorRT engine building
 - Operator/kernel fusion
 - Precision and quantization: FP16/BF16/FP8/INT8/INT4
 - Dynamic shapes and batching
-- TensorRT-LLM concepts
-- Paged KV cache and continuous/in-flight batching
+- TensorRT-LLM concepts for Large Language Model (LLM) inference
+- Paged Key–Value (KV) cache and continuous/in-flight batching
 - Serving latency, throughput and concurrency
 - Benchmark methodology and numerical validation
 

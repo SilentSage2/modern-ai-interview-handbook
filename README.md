@@ -17,6 +17,19 @@ module/
 
 The idea is simple: **open `README.md` and read the chapter continuously**, rather than jumping among many small files.
 
+## Abbreviations and notation
+
+This handbook does **not** assume that an abbreviation is self-explanatory. Each chapter begins with a local terminology table, and the repository-wide [`GLOSSARY.md`](GLOSSARY.md) expands terms such as SGD, ROC-AUC, ELBO, LoRA, PPO, GQA, RAG, FSDP, and TensorRT.
+
+Learn a new term in this order:
+
+1. full name;
+2. what problem it solves;
+3. core mechanism;
+4. why the design exists;
+5. tradeoffs and failure modes;
+6. only then memorize the abbreviation.
+
 ## Curriculum
 
 | # | Module | Status |

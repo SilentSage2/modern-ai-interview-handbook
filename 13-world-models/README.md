@@ -12,6 +12,38 @@ World models extend representation and generative modeling into action-condition
 - Explain multi-step rollout error and imagined planning.
 - Connect MPC, Dreamer, JEPA-style prediction, and generative world models.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **MPC** | Model Predictive Control | Plan with model, execute one action, replan. |
+| **CEM** | Cross-Entropy Method | Sampling-based optimizer for action sequences. |
+| **JEPA** | Joint-Embedding Predictive Architecture | Predicts representations instead of raw pixels. |
+| **RSSM** | Recurrent State-Space Model | Combines recurrent deterministic and stochastic state. |
+| **RL** | Reinforcement Learning | Policy/value learning from reward. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### A world model learns consequences before acting
+
+The defining idea is counterfactual prediction: from the same current state, predict different futures under different actions.
+
+### The latent state should be predictive, not merely compressed
+
+Useful state keeps information needed for future observations, rewards, and action consequences while discarding irrelevant detail.
+
+### Long-horizon accuracy matters
+
+Planning recursively feeds predictions back into the model. Small one-step errors can compound and a planner may exploit model mistakes.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Learned dynamics p(s_{t+1}|s_t,a_t)
@@ -20,9 +52,9 @@ World models extend representation and generative modeling into action-condition
 - Model-based RL
 - Imagined rollouts
 - Planning and model predictive control
-- Dreamer-style latent imagination
+- Dreamer-style latent imagination for model-based Reinforcement Learning (RL)
 - Predicting pixels vs representations
-- JEPA-style predictive representations
+- Joint-Embedding Predictive Architecture (JEPA)-style predictive representations
 - Generative world models
 - Uncertainty and compounding model error
 
@@ -360,7 +392,7 @@ Inference estimates:
 
 
 ```math
-q_\phi(z_t|o_{\le t},a_{<t}).
+q_\phi(z_t|o_{0:t},a_{0:t-1}).
 ```
 
 
@@ -649,7 +681,7 @@ A useful taxonomy separates what the model predicts.
 
 
 ```math
-p(o_{t+1}|o_{\le t},a_{\le t}).
+p(o_{t+1}|o_{0:t},a_{0:t}).
 ```
 
 
@@ -665,7 +697,7 @@ p(z_{t+1}|z_t,a_t).
 
 
 ```math
-p(o_{t+1:t+H}|o_{\le t},a_{t:t+H-1}).
+p(o_{t+1:t+H}|o_{0:t},a_{t:t+H-1}).
 ```
 
 
@@ -814,7 +846,7 @@ A video prediction model
 
 
 ```math
-p(o_{t+1}|o_{\le t})
+p(o_{t+1}|o_{0:t})
 ```
 
 
@@ -824,7 +856,7 @@ To become useful for an embodied agent, incorporate control:
 
 
 ```math
-p(o_{t+1}|o_{\le t},a_t).
+p(o_{t+1}|o_{0:t},a_t).
 ```
 
 

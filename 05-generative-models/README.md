@@ -12,6 +12,37 @@ Diffusion, world models, and multimodal generation are easier to understand when
 - Derive the GAN objective intuition and flow change-of-variables formula.
 - Know the tradeoffs among major generative-model families.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **VAE** | Variational Autoencoder | Latent-variable likelihood model. |
+| **GAN** | Generative Adversarial Network | Generator/discriminator adversarial training. |
+| **EBM** | Energy-Based Model | Defines probability through an energy function. |
+| **Flow** | Normalizing Flow | Invertible likelihood model with change-of-variables. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Generative families make different compromises
+
+Autoregressive models, VAEs, GANs, flows, and diffusion all model data distributions but trade exact likelihood, sampling speed, stability, and architectural flexibility differently.
+
+### Latent variables separate hidden causes from observations
+
+A latent-variable model asks both how hidden factors generate data and how to infer those factors from observations.
+
+### Adversarial versus likelihood-based learning
+
+GANs avoid a tractable normalized likelihood by learning through a discriminator; likelihood/score-based models use more explicit probabilistic structure. This changes stability and what quantitative probability information is available.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Autoregressive factorization
@@ -35,7 +66,7 @@ Factorize
 ```math
 p(x_1,\ldots,x_T)
 =
-\prod_{t=1}^T p(x_t|x_{<t}).
+\prod_{t=1}^T p(x_t|x_{1:t-1}).
 ```
 
 
@@ -168,7 +199,7 @@ For images, one can choose an ordering:
 
 
 ```math
-p(x)=\prod_i p(x_i|x_{<i}).
+p(x)=\prod_i p(x_i|x_{1:i-1}).
 ```
 
 

@@ -1,97 +1,164 @@
 # GPU, Distributed Training & AI Systems — Interview Q&A
 
-## Q1. Explain: GPU memory hierarchy and bandwidth
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-## Q2. Explain: Training memory: parameters, gradients, optimizer states, activations
+Do not memorize the wording; learn the reasoning structure.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+## Q1. How do you estimate training memory for a large model?
 
-## Q3. Explain: Mixed precision: FP32, FP16, BF16, FP8 concepts
+Break memory into terms:
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+```math
+M
+=
+M_{\mathrm{params}}
++
+M_{\mathrm{grads}}
++
+M_{\mathrm{optimizer}}
++
+M_{\mathrm{activations}}
++
+M_{\mathrm{temporary}}.
+```
 
-## Q4. Explain: Data parallelism
+For Adam-style training, optimizer state can dominate because each trainable parameter may have two FP32 moment buffers and possibly additional copies. Activations scale with batch size, sequence length/resolution, hidden width, and depth.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+**Key idea.** Identify the dominant memory term before choosing an optimization:
+- checkpointing reduces activations;
+- FSDP/ZeRO reduce replicated model state;
+- PEFT reduces trainable gradient/optimizer state;
+- quantization reduces weight storage;
+- smaller batch/sequence reduces activations.
 
-## Q5. Explain: Tensor parallelism
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+---
 
-## Q6. Explain: Pipeline parallelism
+## Q2. Data parallelism, tensor parallelism, and pipeline parallelism: how do they differ?
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+**Data Parallelism (DP):** each GPU has a model replica and processes different examples; gradients are synchronized.
 
-## Q7. Explain: DDP, FSDP and ZeRO concepts
+**Tensor Parallelism (TP):** split individual layer matrices/operations across GPUs. Use this when model/layer width does not fit one device or when model-level compute must be parallelized.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+**Pipeline Parallelism (PP):** place different layer groups on different devices and stream microbatches through stages.
 
-## Q8. Explain: NCCL and collective communication
+**Design principle.** They solve different bottlenecks. Large systems often combine DP × TP × PP.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+**Cost.** Every form introduces communication or synchronization, so adding GPUs can eventually reduce parallel efficiency.
 
-## Practice rule
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+---
 
-## Extended Interview Q&A
+## Q3. What do FSDP and ZeRO actually save?
 
-### E1. Data parallel vs tensor parallel?
+Ordinary data parallelism replicates parameters, gradients, and optimizer states on every worker.
 
-**Answer:** Data parallel replicates the model and splits examples; tensor parallel splits operations/weights of the same layer across devices.
+Fully Sharded Data Parallel (FSDP) and Zero Redundancy Optimizer (ZeRO) strategies shard some or all of those states across workers. Workers gather the pieces needed for computation and reshard or reduce them afterward.
 
-### E2. Why does FSDP save memory?
+**Benefit:** much lower per-device memory.
 
-**Answer:** It shards model states across workers instead of storing complete parameter/gradient/optimizer copies on every GPU.
+**Cost:** more communication, orchestration, and sensitivity to interconnect topology.
 
-### E3. What is arithmetic intensity?
+These are primarily memory-scalability methods, but because they change communication schedules they also affect throughput.
 
-**Answer:** FLOPs per byte moved. High intensity tends to be compute-bound; low intensity tends to be memory-bandwidth bound.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E4. Why can bigger batch improve GPU throughput?
+---
 
-**Answer:** It exposes more parallel work and amortizes kernel launch/overhead, but costs memory and may increase latency.
+## Q4. What is arithmetic intensity and why is it useful?
 
-### E5. Why is BF16 often preferred over FP16?
+Arithmetic intensity is FLOPs performed per byte moved:
 
-**Answer:** BF16 has a much wider exponent range, reducing overflow/underflow risk in large-model training, while still using 16 bits.
+```math
+I
+=
+\frac{\text{FLOPs}}
+{\text{bytes transferred}}.
+```
 
+High-intensity workloads can become compute-bound; low-intensity workloads are often memory-bandwidth bound.
 
-## Whiteboard / drill questions
+Large matrix multiplications reuse data heavily and often have high intensity. LLM decode at small batch repeatedly reads large weights and KV cache for very few new tokens, so it can be bandwidth-limited.
 
-- Estimate Adam training-state memory for a 7B model.
-- Why does FSDP save memory but add communication?
-- When do you choose tensor parallel rather than data parallel?
-- Why might a GPU show low utilization despite enough memory?
-- Explain arithmetic intensity using LLM prefill vs decode.
+**Why this matters.** It explains why quantization can speed decode even when the GPU has unused theoretical FLOPs: fewer bytes must be moved.
 
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+---
 
-### A1. Why can more GPUs make training slower?
+## Q5. Why can larger batches improve GPU throughput?
 
-**Answer:** Communication, synchronization, input bottlenecks, or smaller per-GPU work can outweigh parallel compute gains. Scaling should be measured rather than assumed.
+GPUs are efficient when many parallel operations are available. Larger batches create larger matrix operations, improve occupancy/data reuse, and amortize kernel-launch overhead.
 
-### A2. What memory does gradient checkpointing not reduce?
+But larger batches:
+- consume more memory;
+- can increase online request latency;
+- reduce gradient noise during training;
+- may require learning-rate retuning.
 
-**Answer:** It primarily reduces stored activations. It does not inherently shrink parameter, optimizer-state, or gradient storage.
+Therefore training batch size and inference-serving batch size are different optimization problems. Throughput should always be balanced against memory and latency constraints.
 
-### A3. Why does tensor parallelism have more frequent communication than data parallelism?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Tensor-parallel devices cooperate inside individual layer operations, whereas data-parallel replicas can compute a larger local portion of the step before synchronizing gradients.
+---
 
-### A4. Why can CPU preprocessing limit a fast GPU?
+## Q6. BF16 versus FP16: why is BF16 common in large-model training?
 
-**Answer:** If batches are not prepared and transferred fast enough, the GPU has idle gaps. End-to-end throughput is limited by the slowest pipeline stage.
+Both use 16 bits, but BF16 keeps an FP32-like exponent range with fewer mantissa bits. FP16 has more mantissa precision but a much narrower exponent range.
 
-### A5. What is a good first step when GPU utilization is low?
+Large models produce values across a wide dynamic range, so BF16 reduces overflow and underflow risk and often avoids explicit loss scaling.
 
-**Answer:** Profile the timeline and check input pipeline, host-device copies, kernel sizes, synchronization, and communication before changing the algorithm.
+**Systems benefit.** Both formats reduce memory traffic and can use accelerator tensor cores relative to FP32.
 
-<!-- ADVANCED_QA_END -->
+**Caveat.** Sensitive reductions and optimizer accumulators may still use higher precision. Mixed precision means choosing precision per operation, not forcing everything to BF16.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. Why can multi-GPU scaling saturate?
+
+If one GPU throughput is `P1` and n-GPU throughput is `Pn`, parallel efficiency is:
+
+```math
+E_n
+=
+\frac{P_n}{nP_1}.
+```
+
+Efficiency drops as communication, synchronization, load imbalance, and input bottlenecks become significant relative to useful compute.
+
+Tensor parallelism may communicate inside layers; data parallelism synchronizes gradients; pipeline parallelism has bubbles.
+
+A strong benchmark reports both speedup and parallel efficiency and profiles communication rather than only stating that more GPUs were used.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. How do you debug a slow GPU workload?
+
+Profile before rewriting kernels.
+
+Ask:
+1. Is the GPU idle waiting for data?
+2. Are CPU→GPU or GPU→CPU copies frequent?
+3. Are kernels too small?
+4. Is HBM bandwidth saturated?
+5. Is compute saturated?
+6. Is multi-GPU communication dominating?
+7. Is precision preventing fast tensor-core kernels?
+8. Is synchronization serializing work?
+
+This methodology applies equally to PyTorch and custom CuPy/scientific pipelines. A function already fast on CPU may not justify GPU transfer and launch overhead.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

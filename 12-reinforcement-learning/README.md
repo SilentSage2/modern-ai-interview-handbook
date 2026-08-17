@@ -12,16 +12,49 @@ RL is the theoretical foundation for PPO/RLHF, agents, world models, and embodie
 - Derive policy gradients and actor–critic intuition.
 - Explain GAE, PPO clipping, and model-free vs model-based RL.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **RL** | Reinforcement Learning | Learning sequential decisions from reward. |
+| **MDP** | Markov Decision Process | State/action/transition/reward/discount formalism. |
+| **TD** | Temporal-Difference learning | Bootstrapped value learning. |
+| **DQN** | Deep Q-Network | Neural Q-learning. |
+| **GAE** | Generalized Advantage Estimation | Bias–variance controlled advantage estimator. |
+| **PPO** | Proximal Policy Optimization | Clipped policy-gradient method. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### RL optimizes long-term consequences
+
+Actions change the future data distribution, so the objective is expected cumulative reward rather than one-step prediction error.
+
+### Value learning and policy learning are different routes
+
+Q-learning estimates how good actions are; policy gradients directly adjust action probabilities. Actor–critic combines both.
+
+### PPO is about limiting policy update size
+
+A large policy-gradient step can make collected data stale and destabilize training. PPO's clipped ratio reduces the incentive for overly large probability changes.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
-- MDP: state, action, transition, reward, discount
+- Markov Decision Process (MDP): state, action, transition, reward, and discount
 - Return, value V(s), action-value Q(s,a), advantage A(s,a)
 - Bellman equations
-- Q-learning and DQN
+- Q-learning and Deep Q-Networks (DQN)
 - Policy gradients and REINFORCE
 - Actor–critic
 - Generalized Advantage Estimation (GAE)
-- PPO and clipped objectives
+- Proximal Policy Optimization (PPO) and clipped objectives
 - Model-free vs model-based RL
 - Offline RL basics
 - Connection from PPO to RLHF
@@ -457,7 +490,7 @@ In partially observable environments, observation $o_t$ may not be Markov. An ag
 
 
 ```math
-z_t=f(o_{\le t},a_{<t}).
+z_t=f(o_{0:t},a_{0:t-1}).
 ```
 
 
@@ -720,7 +753,7 @@ LLM state:
 
 
 ```math
-s_t=(\text{prompt},y_{<t}).
+s_t=(\text{prompt},y_{1:t-1}).
 ```
 
 

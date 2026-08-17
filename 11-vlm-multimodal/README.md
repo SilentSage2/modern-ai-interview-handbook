@@ -12,17 +12,49 @@ VLMs connect visual representation learning with language reasoning and are incr
 - Understand projector and cross-attention interfaces between vision encoders and LLMs.
 - Explain multimodal instruction tuning, freezing strategies, and hallucination.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **VLM** | Vision–Language Model | Joint visual/language model. |
+| **CLIP** | Contrastive Language–Image Pretraining | Dual-encoder image-text alignment. |
+| **VQA** | Visual Question Answering | Language answers grounded in images. |
+| **OCR** | Optical Character Recognition | Reading text from images. |
+| **LoRA** | Low-Rank Adaptation | Efficient Transformer adaptation. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### A VLM needs an interface between visual and language representations
+
+A projector, resampler, or cross-attention module maps visual evidence into a form the LLM can use. This interface is often the central architectural choice.
+
+### Alignment and generation are different problems
+
+CLIP learns whether image/text match; a generative VLM must also condition autoregressive language generation on visual evidence.
+
+### Grounding is the main reliability challenge
+
+A strong language prior can dominate weak visual evidence, creating fluent but unsupported details. Evaluation must test whether claims are actually grounded in the image.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Dual encoders and contrastive image-text alignment
-- CLIP loss and retrieval
+- Contrastive Language–Image Pretraining (CLIP) loss and retrieval
 - Vision encoder + projector + LLM architecture
 - Cross-attention and multimodal fusion
 - Visual tokens and language tokens
 - Freezing vs tuning vision encoder/projector/LLM
 - Multimodal instruction tuning
 - Image-text grounding and hallucination
-- VLM evaluation: VQA, retrieval, grounding, robustness
+- Vision–Language Model (VLM) evaluation: Visual Question Answering (VQA), retrieval, grounding, and robustness
 - Medical/scientific VLM adaptation
 
 
@@ -256,7 +288,7 @@ Optimize autoregressive response likelihood:
 =
 -\sum_{t\in y}
 \log
-p_\theta(y_t|I,x,y_{<t}).
+p_\theta(y_t|I,x,y_{1:t-1}).
 ```
 
 

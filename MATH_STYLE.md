@@ -37,3 +37,24 @@ $`p(y|x)`$
 - multiline `$$ ... $$`
 
 The repository uses fenced `math` blocks for all display equations.
+
+
+## Robust sequence-history notation
+
+For both clarity and GitHub rendering robustness, prefer explicit index ranges:
+
+```math
+x_{1:t-1}
+```
+
+rather than compact shorthand such as `x_<t`, and:
+
+```math
+o_{0:t},
+\qquad
+a_{0:t-1}
+```
+
+rather than history shorthand based on less-than symbols.
+
+The explicit range makes it immediately clear which observations/actions are included.

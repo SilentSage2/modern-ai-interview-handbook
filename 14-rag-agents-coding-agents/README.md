@@ -12,13 +12,45 @@ Agent roles require more than prompting: retrieval, tool use, memory, planning, 
 - Understand tool calling, ReAct, memory, planning, and agent evaluation.
 - Explain coding-agent workflows and failure modes.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **RAG** | Retrieval-Augmented Generation | Retrieves evidence before generation. |
+| **ANN** | Approximate Nearest Neighbor | Fast vector retrieval in large embedding stores. |
+| **ReAct** | Reason + Act | Alternates reasoning, tool action, and observation. |
+| **API** | Application Programming Interface | Programmatic tool/service interface. |
+| **SDK** | Software Development Kit | Libraries for building applications against a platform. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### RAG separates knowledge storage from model parameters
+
+Retrieval supplies external evidence at request time, so knowledge can change without retraining the LLM.
+
+### Dense retrieval learns a semantic coordinate system
+
+Query/document encoders learn vectors where relevant pairs are close. Dot product is only the scoring mechanism; contrastive training creates the geometry.
+
+### An agent is a closed-loop system
+
+The model observes state, chooses a tool/action, receives a result, updates state, and acts again. Reliability therefore depends on control logic, permissions, memory, verification, and stopping conditions.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Embeddings and semantic retrieval
 - Chunking, indexing, vector search, reranking
-- RAG vs fine-tuning
+- Retrieval-Augmented Generation (RAG) versus fine-tuning
 - Tool/function calling
-- ReAct: reason–act–observe loops
+- ReAct (Reason + Act): reason–act–observe loops
 - Agent memory and state
 - Planning and task decomposition
 - Multi-agent orchestration
@@ -57,8 +89,16 @@ RAG separates:
 
 ### 2. Dense Retrieval
 
-Embed query and document:
+> **Key idea: learned semantic search.** Traditional keyword search matches words. Dense retrieval instead learns an embedding space in which a query and a relevant document occupy nearby positions even if they do not use exactly the same vocabulary. The important modeling object is therefore the **geometry of the embedding space**; the dot product below is simply the fast scoring rule used after that geometry has been learned.
 
+Let:
+- $q$ = the user query;
+- $d$ = a document or document chunk;
+- $f_q$ = query encoder;
+- $f_d$ = document encoder;
+- $z_q$ and $z_d$ = learned embedding vectors.
+
+Encode query and document:
 
 ```math
 z_q=f_q(q),
@@ -66,33 +106,38 @@ z_q=f_q(q),
 z_d=f_d(d).
 ```
 
-
-Similarity:
-
+A simple relevance score is the dot product:
 
 ```math
-s(q,d)=z_q^\top z_d
+s(q,d)=z_q^\top z_d.
 ```
 
+If vectors are normalized, this is equivalent to cosine similarity up to scale. Larger similarity should mean “more semantically relevant.”
 
-or cosine similarity.
-
-Retrieve top-$k$:
-
+Retrieve the top $k$ documents:
 
 ```math
 D_k(q)
 =
-\mathrm{TopK}_d\,s(q,d).
+\operatorname{TopK}_{d}\;s(q,d).
 ```
 
+Here **$k$ is simply the number of retrieved candidates**. For example, `top-k = 20` means the retriever returns the 20 chunks with the highest relevance scores.
+
+Why not send the whole database to the LLM? Because context is limited and expensive. Retrieval is a **candidate-selection stage** that tries to maximize the chance that the needed evidence is present in a small context budget.
 
 ---
 
 ### 3. Contrastive Retriever Training
 
-For positive document $d^+$:
+> **Key idea: turn retrieval into a classification problem.** The embedding space does not become semantic automatically. It is trained so a query scores its relevant document above competing documents.
 
+For one query, let:
+- $d^+$ = a relevant/positive document;
+- $d_j^-$ = negative candidate documents;
+- $\tau$ = temperature controlling how sharp the competition is.
+
+A common contrastive objective is:
 
 ```math
 \mathcal L
@@ -107,8 +152,18 @@ e^{s(q,d^+)/\tau}
 }.
 ```
 
+The numerator is the positive document's score. The denominator contains the positive plus competing negatives. Minimizing the loss increases the positive's relative probability.
 
-This is the same broad contrastive-learning principle used in CLIP.
+The **design choices around the equation** are often more important than the equation itself:
+
+1. **Positive construction:** what counts as truly relevant?
+2. **Negative sampling:** random negatives are often too easy; hard negatives teach fine distinctions.
+3. **False negatives:** two documents may both be relevant even if only one is labeled positive.
+4. **Encoder sharing:** query and document encoders may share weights or specialize.
+5. **Temperature $\tau$:** smaller values make score differences matter more strongly.
+
+This is the same broad contrastive-learning principle used in CLIP and self-supervised representation learning: learn a space in which the intended correspondences are geometrically easy to retrieve.
+
 
 ---
 
@@ -349,7 +404,7 @@ Retrieve:
 ```math
 i_1,\ldots,i_k
 =
-\mathrm{TopK}
+\operatorname{TopK}
 (z_q^\top z_i).
 ```
 

@@ -12,6 +12,38 @@ CNNs remain core interview material even for ViT/VLM roles, and many vision syst
 - Explain CNN inductive bias and U-Net/ResNet design.
 - Compare CNN and ViT modeling assumptions.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **CNN** | Convolutional Neural Network | Uses local convolution and weight sharing. |
+| **ResNet** | Residual Network | Uses residual connections to stabilize deep optimization. |
+| **U-Net** | U-shaped encoder–decoder network | Uses long skip connections for precise spatial outputs. |
+| **IoU** | Intersection over Union | Overlap metric for detection/segmentation. |
+| **ViT** | Vision Transformer | Transformer over image patch tokens. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Convolution encodes a spatial prior
+
+CNNs assume nearby pixels interact strongly and the same local feature detector can be reused across locations. This built-in bias makes them parameter- and data-efficient.
+
+### Dense prediction needs semantics and localization
+
+Deep encoder features have broad semantic context but low spatial resolution. U-Net-style skips restore high-resolution information so outputs can be spatially precise.
+
+### CNN versus ViT is about inductive bias
+
+CNNs hard-code locality/equivariance; ViTs learn more interaction structure from data. Compare data scale, resolution, global interaction, and compute rather than declaring one universally superior.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Convolution, receptive field, stride, padding, dilation

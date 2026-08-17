@@ -1,77 +1,120 @@
 # ViT & Vision Foundation Models — Interview Q&A
 
-## Q1. How does ViT convert an image into Transformer input?
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Short answer:** Split the image into patches, flatten/project each patch into an embedding, add positional information, and process the token sequence with Transformer encoder blocks.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Do not memorize the wording; learn the reasoning structure.
 
-## Q2. Why can CNNs be more data-efficient than vanilla ViTs?
+## Q1. How does ViT convert an image into a Transformer sequence?
 
-**Short answer:** CNNs impose locality and translation-equivariance biases, while ViTs learn more of the spatial structure from data.
+A Vision Transformer (ViT) divides an image into non-overlapping patches, flattens each patch, and linearly projects it to a token embedding.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+For image height `H`, width `W`, and patch size `P`:
 
-## Practice rule
+```math
+N
+=
+\frac{HW}{P^2}.
+```
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+A learnable CLS token may be prepended for global classification, and positional information is added before Transformer blocks.
 
-## Extended Interview Q&A
+**Key idea.** ViT turns a 2D image into the same abstract object a language Transformer expects: a sequence of vectors. This architectural unification is why Transformer technology transfers naturally across modalities.
 
-### E1. Why can patch embedding be implemented with a convolution?
+**Implementation note.** Patch flattening plus linear projection can be implemented as Conv2D with kernel size and stride equal to `P`.
 
-**Answer:** A Conv2D with kernel size equal to patch size and stride equal to patch size applies one learned linear projection to each non-overlapping patch.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E2. What happens when patch size decreases?
+---
 
-**Answer:** Token count grows quadratically with inverse patch size, increasing spatial detail but making self-attention much more expensive.
+## Q2. Why does patch size matter so much?
 
-### E3. Why does MAE use a high masking ratio?
+Smaller patches preserve finer spatial detail but create more tokens. Halving patch size in both image dimensions multiplies token count by four.
 
-**Answer:** Natural images are redundant. Heavy masking prevents trivial local copying and encourages the encoder to learn broader semantic/contextual structure.
+Because global self-attention scales quadratically with token count, the number of pairwise attention scores can grow roughly sixteen-fold.
 
-### E4. How do you fine-tune ViT at a new image resolution?
+**Tradeoff.**
+- Large patches: cheaper but coarser.
+- Small patches: detailed but expensive.
+- High-resolution or 3D data: token count can become the dominant constraint.
 
-**Answer:** The number of patch positions changes, so learned positional embeddings often need interpolation; the classifier head may also be replaced.
+This is why hierarchical, windowed, axial, or factorized attention designs are common in high-resolution vision.
 
-### E5. ViT vs Swin?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Vanilla ViT uses global attention over all patches; Swin uses shifted local windows to reduce complexity and build a hierarchical representation more suitable for dense vision tasks.
+---
 
+## Q3. Why can ViTs require more data than CNNs?
 
-## Whiteboard / drill questions
+CNNs encode strong image priors: locality, weight sharing, and translation equivariance. These assumptions reduce what must be learned from data.
 
-- Compute the number of tokens for 384×384 images with 16×16 patches.
-- Why can smaller patches become dramatically more expensive?
-- Why can MAE drop masked patches from the encoder?
-- What exactly does a linear probe measure?
-- How would you adapt a pretrained ViT to 3D medical images?
+ViTs impose weaker spatial priors. Their flexibility can be advantageous with large-scale pretraining, but with small datasets they may be less sample efficient.
 
+**Best interview framing.** This is a bias–data tradeoff, not simply “attention is global.” Large pretrained ViTs transfer extremely well because pretraining supplies broad visual structure that a small supervised dataset could not teach from scratch.
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A1. Why is CLS token not strictly necessary?
+---
 
-**Answer:** A global representation can also be formed by mean pooling patch tokens or another learned pooling mechanism. CLS is one design for collecting global information, not a mathematical requirement.
+## Q4. MAE versus DINO: what is the conceptual difference?
 
-### A2. How would you adapt a 2D pretrained ViT to 3D data?
+Masked Autoencoder (MAE) hides many image patches and trains the model to reconstruct the missing content. This encourages representations that preserve contextual information useful for predicting what is absent.
 
-**Answer:** Options include slice-wise processing, inflating/learning 3D patch embedding, factorized spatial-depth attention, or using the 2D backbone as an encoder while adding depth aggregation. The choice depends on memory and whether through-plane structure matters.
+DINO-style Self-Distillation with No Labels trains a student to match a teacher's representation across different image views. This emphasizes view-invariant semantic structure rather than raw reconstruction.
 
-### A3. What does a linear probe tell you that full fine-tuning does not?
+**Design lesson.** The self-supervised target determines what the representation values:
+- MAE: predictive/reconstructive information;
+- DINO: invariant semantic consistency;
+- CLIP: language-aligned concepts.
 
-**Answer:** It measures how linearly accessible downstream information already is in the frozen representation. Full fine-tuning mixes representation quality with adaptation capacity.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A4. Why can high-resolution ViT inference become expensive faster than CNN inference?
+---
 
-**Answer:** Token count scales with image area divided by patch area, and global attention scales quadratically in token count. CNN cost generally scales more nearly linearly with pixel count for fixed kernels.
+## Q5. Why is CLIP important for vision foundation models?
 
-### A5. What would make a vision model a foundation model rather than just a pretrained ViT?
+Contrastive Language–Image Pretraining (CLIP) learns image and text encoders whose normalized embeddings are close for matching pairs and far for mismatched pairs.
 
-**Answer:** Broad pretraining plus evidence that the representation can adapt across multiple downstream tasks/domains/interfaces. Architecture alone does not make it a foundation model.
+This creates:
+1. a semantic visual representation tied to natural language;
+2. zero-shot classification by comparing an image embedding to text prompt embeddings;
+3. a reusable retrieval/alignment space for multimodal systems.
 
-<!-- ADVANCED_QA_END -->
+**Bigger idea.** Language becomes an open-ended label space. Instead of a classifier with fixed class indices, the model can compare images to arbitrary textual concepts.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q6. What makes a model a vision foundation model rather than simply a ViT?
+
+The architecture alone does not define a foundation model. A vision foundation model should be pretrained broadly enough that its representation can be adapted across multiple downstream tasks, domains, or prompting interfaces.
+
+Evidence might include transfer to classification, segmentation, retrieval, detection, promptable segmentation, or multimodal alignment.
+
+A narrow ViT trained only for one task is still task-specific. Foundation-model claims should be justified by breadth of pretraining and demonstrated transfer, not by size or the word Transformer.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. How would you adapt a 2D ViT to 3D medical images?
+
+Several approaches are reasonable:
+- process slices independently and aggregate across depth;
+- use 3D patch embedding and 3D attention;
+- use windowed/axial/factorized attention;
+- reuse a 2D pretrained encoder and add a depth aggregation module;
+- use LoRA or domain-specific self-supervised adaptation.
+
+**First calculation:** token budget. A 192×192×128 volume with 16×16×16 patches has 1,152 tokens, so full global attention already creates over a million token pairs per head/layer.
+
+The architecture should therefore be chosen after considering memory and whether through-plane interactions truly need global attention.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

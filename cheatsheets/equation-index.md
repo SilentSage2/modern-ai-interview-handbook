@@ -40,7 +40,7 @@ L=-\log p_y
 
 
 ```math
-p(x_{1:T})=\prod_t p(x_t|x_{<t})
+p(x_{1:T})=\prod_t p(x_t|x_{1:t-1})
 ```
 
 

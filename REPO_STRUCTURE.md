@@ -53,10 +53,13 @@
 16-inference-deployment/README.md
 16-inference-deployment/interview_qa.md
 16-inference-deployment/references.md
+CHANGELOG_v6.md
+GLOSSARY.md
 LICENSE
 MATH_STYLE.md
 README.md
 REPO_STRUCTURE.md
+VALIDATION_REPORT.md
 cheatsheets/equation-index.md
 cheatsheets/interview-answer-template.md
 cheatsheets/model-taxonomy.md

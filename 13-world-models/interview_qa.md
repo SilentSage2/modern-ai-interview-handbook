@@ -1,77 +1,163 @@
 # World Models — Interview Q&A
 
-## Q1. World model vs generative model?
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Short answer:** A world model specifically captures environment dynamics and consequences—often action-conditioned—so it can support prediction and planning; a generic generative model need not model interventions or dynamics.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+Do not memorize the wording; learn the reasoning structure.
 
-## Q2. Why use latent dynamics?
+## Q1. What exactly makes a model a world model?
 
-**Short answer:** High-dimensional observations contain irrelevant detail; latent dynamics can focus capacity on predictive, decision-relevant state.
+A world model learns how the environment evolves, usually including how the agent's action changes the future. A minimal control-relevant form is:
 
-**Follow-ups to prepare:** Why? When does this fail? What is the computational cost? What alternative would you use?
+```math
+p_\theta(s_{t+1}|s_t,a_t).
+```
 
-## Practice rule
+For high-dimensional observations, the model often learns a latent state:
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+```math
+z_t=E(o_t),
+\qquad
+p_\theta(z_{t+1}|z_t,a_t).
+```
 
-## Extended Interview Q&A
+**Key idea.** A generic generator models plausible data; a world model models **consequences**. It supports questions such as: “from this same state, what happens if I take action A instead of action B?”
 
-### E1. Why is one-step prediction error not enough?
+That action-conditioned counterfactual structure is what enables planning.
 
-**Answer:** Planning recursively feeds predictions back into the model. Small one-step errors can compound, so long-horizon rollout quality matters.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E2. What makes a latent useful for planning?
+---
 
-**Answer:** It should retain state information needed to predict controllable future consequences while discarding irrelevant observation detail.
+## Q2. Why use a latent state instead of predicting pixels directly?
 
-### E3. Model predictive control vs learned policy?
+Raw pixels contain enormous amounts of detail that can be irrelevant to decisions: texture, lighting, background, or sensor noise. A latent state can compress observations into variables useful for predicting future dynamics, reward, and controllability.
 
-**Answer:** MPC solves an optimization over future action sequences online using the model; a learned policy directly maps state to action after training.
+**Tradeoff.** If the latent discards action-relevant information, planning fails. If it retains too much irrelevant detail, dynamics learning becomes harder.
 
-### E4. Why can uncertainty matter in world-model planning?
+The desired state is therefore not simply “low dimensional.” It should be **predictively sufficient** for the future quantities and decisions the agent cares about.
 
-**Answer:** The planner may exploit model errors and choose actions in poorly modeled regions. Uncertainty can penalize or detect unreliable imagined trajectories.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### E5. Can diffusion be a world model?
+---
 
-**Answer:** Yes, if used to model action-conditioned future states/trajectories. But diffusion used only for static data generation is not automatically a world model.
+## Q3. Why is one-step prediction error a weak evaluation for a world model?
 
+One-step evaluation always starts from the true state. Planning recursively feeds the model's own prediction back into future predictions:
 
-## Whiteboard / drill questions
+```math
+\hat z_{t+2}
+=
+F(\hat z_{t+1},a_{t+1}).
+```
 
-- Why can a planner exploit model error?
-- How would you evaluate world-model error as a function of horizon?
-- Why combine deterministic and stochastic latent state?
-- Compare MPC with an actor learned from imagined trajectories.
-- Under what condition does a diffusion model qualify as a world model?
+Small one-step errors can accumulate rapidly. A model can have excellent one-step MSE but unrealistic long open-loop rollouts.
 
+A better evaluation plots error versus rollout horizon, tests reward/value prediction, and measures downstream planning performance.
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+**Key idea.** The model should be evaluated under the way it will actually be used—recursive imagination—not only under teacher-forced one-step prediction.
 
-### A1. What is the difference between open-loop and closed-loop prediction?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** Open-loop recursively feeds model predictions forward without real correction. Closed-loop/receding-horizon control repeatedly incorporates new real observations, limiting accumulated model drift.
+---
 
-### A2. Why can a high-fidelity pixel model still be a poor controller?
+## Q4. How does Model Predictive Control use a world model?
 
-**Answer:** It may spend capacity on visually accurate but decision-irrelevant detail while failing to predict controllable variables or rewards precisely enough for planning.
+Model Predictive Control (MPC) evaluates candidate future action sequences in the learned dynamics model, scores their predicted returns, executes only the first action of the best sequence, observes the real next state, and replans.
 
-### A3. How do ensembles help a world model?
+**Why execute only the first action?** A fresh real observation corrects accumulated model error.
 
-**Answer:** Disagreement among independently trained dynamics models provides a rough epistemic uncertainty signal, useful for penalizing poorly supported imagined trajectories.
+The loop is:
 
-### A4. Why is action coverage important in the training dataset?
+```text
+observe
+→ imagine candidate futures
+→ choose best sequence
+→ execute first action
+→ observe real outcome
+→ replan
+```
 
-**Answer:** Counterfactual planning evaluates actions that may differ from historical behavior. If the data rarely contains those actions in similar states, transition predictions may be unreliable.
+MPC therefore trades online computation for robustness to imperfect long-horizon predictions.
 
-### A5. What does 'imagination' mean in Dreamer-like methods?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** It means rolling forward trajectories using learned latent dynamics rather than interacting with the real environment. Actor/critic learning can then use these simulated latent trajectories.
+---
 
-<!-- ADVANCED_QA_END -->
+## Q5. Why can a planner exploit model errors?
+
+A planner searches for actions with high **predicted** reward. If the learned model has an unrealistic region where reward is overestimated, optimization may deliberately drive the imagined trajectory there.
+
+This is a distribution-shift problem: planning can evaluate states/actions poorly covered by training data.
+
+Mitigation includes:
+- model ensembles and disagreement;
+- uncertainty penalties;
+- conservative planning;
+- shorter MPC horizons;
+- restricting actions to data support;
+- online data collection.
+
+This failure mode is one of the main practical reasons world-model uncertainty matters.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q6. What is Dreamer-style imagination?
+
+Dreamer learns a latent world model from real experience. It then rolls latent states forward inside the learned dynamics and trains actor/critic components using those **imagined** trajectories instead of requiring every policy update to come from new real interaction.
+
+**Key idea.** Real environment interaction is expensive; model-generated latent trajectories are cheap.
+
+The method separates:
+1. representation/state inference;
+2. latent dynamics;
+3. reward/value prediction;
+4. policy/value optimization.
+
+Its usefulness depends on the imagined trajectories being sufficiently accurate in decision-relevant regions.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. JEPA-style prediction versus pixel prediction?
+
+Pixel prediction asks the model to reproduce exact future observations. This can waste capacity on unpredictable low-level detail.
+
+Joint-Embedding Predictive Architecture (JEPA)-style approaches predict a target representation:
+
+```math
+\hat z_{\mathrm{future}}
+\approx
+z_{\mathrm{future}}.
+```
+
+**Design idea.** Predict stable semantic or physical structure rather than every raw pixel.
+
+**Tradeoff.** The target representation must preserve information needed for understanding/control. Abstract prediction is not automatically useful if important dynamics are hidden by the representation.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. Can a diffusion model be a world model?
+
+Yes—if diffusion models action-conditioned future states or trajectories, for example:
+
+```math
+p(o_{t+1}|o_t,a_t).
+```
+
+Conditional diffusion is attractive when the future is multimodal and there are several plausible outcomes.
+
+But a text-to-image diffusion model trained only on static images is not automatically a world model. The defining property is modeling environment dynamics and action consequences, not the denoising algorithm itself.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

@@ -1,105 +1,157 @@
 # LLMs & Foundation Models — Interview Q&A
 
-## Q1. Explain: Tokenization: BPE/SentencePiece intuition
+These are **full interview answers**, not answer outlines. Practice each at three levels:
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+- **30 seconds:** definition + key idea.
+- **2 minutes:** mechanism/equation + design rationale.
+- **5 minutes:** add tradeoffs, failure modes, implementation, and an example.
 
-## Q2. Explain: Decoder-only causal language modeling
+Do not memorize the wording; learn the reasoning structure.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+## Q1. What exactly is an LLM trained to do during pretraining?
 
-## Q3. Explain: Next-token prediction objective
+A decoder-only Large Language Model (LLM) factorizes sequence probability into next-token conditionals and maximizes their likelihood.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+```math
+p(x_{1:T})
+=
+\prod_{t=1}^{T}
+p(x_t|x_{1:t-1}).
+```
 
-## Q4. Explain: Scaling: parameters, tokens, compute
+Training therefore becomes cross-entropy prediction of the next token at every position.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+**Key idea.** The objective is simple, but solving it across enormous heterogeneous corpora requires modeling grammar, semantics, factual associations, code, discourse, and many task patterns. Broad capability emerges because all of those structures help predict what comes next.
 
-## Q5. Explain: Base model vs instruction-following model
+**Important distinction.** Pretraining teaches continuation. It does not by itself guarantee helpful instruction-following behavior, which is why post-training such as SFT and preference optimization exists.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-## Q6. Explain: Supervised fine-tuning (SFT)
+---
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+## Q2. What is the difference between a base model and an instruction model?
 
-## Q7. Explain: Preference learning: RLHF and DPO
+A **base model** is mainly pretrained for next-token prediction. If prompted with a question, it may continue the text rather than consistently behave like an assistant.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+An **instruction model** undergoes post-training such as Supervised Fine-Tuning (SFT) on instruction–response examples and often preference optimization.
 
-## Q8. Explain: In-context learning and prompting
+**Design idea.** Pretraining creates broad capability; post-training shapes how that capability is exposed and which behaviors are preferred.
 
-**Answer outline:** definition → intuition → key equation/architecture → tradeoff → example.
+A strong answer separates:
+- pretraining;
+- SFT;
+- preference optimization such as RLHF/DPO;
+- inference prompting.
 
-## Practice rule
+Calling all of these simply “fine-tuning” hides important differences in objective and data.
 
-For each answer prepare three versions:
-- **30 sec:** concise definition + core intuition.
-- **2 min:** equation/architecture + tradeoff.
-- **5 min:** implementation, failure cases, and comparison with alternatives.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-## Extended Interview Q&A
+---
 
-### E1. Base model vs instruction model?
+## Q3. SFT, RLHF, and DPO: what does each stage optimize?
 
-**Answer:** A base model is optimized for next-token prediction over broad pretraining data. An instruction model is post-trained on instruction/response behavior and often preference data.
+**SFT (Supervised Fine-Tuning)** imitates target responses token by token.
 
-### E2. Why is next-token prediction enough to learn broad representations?
+**RLHF (Reinforcement Learning from Human Feedback)** typically learns a reward or preference signal and optimizes the policy while constraining it from drifting too far from a reference model.
 
-**Answer:** Predicting the next token across diverse data requires modeling syntax, semantics, world regularities, discourse, and task patterns. Scale turns a simple local objective into broad representation learning.
+**DPO (Direct Preference Optimization)** uses preferred/rejected response pairs and directly increases the preferred response relative to the rejected response and the reference model, without an explicit PPO loop.
 
-### E3. Perplexity vs task accuracy?
+**Key difference in supervision.**
+- SFT says: “produce this response.”
+- Preference learning says: “response A is better than response B.”
 
-**Answer:** Perplexity measures predictive likelihood on text, not directly instruction following, factuality, reasoning, safety, or downstream utility.
+DPO is operationally simpler than classical RLHF, but reinforcement learning remains important when rewards come from interactive environments, tools, verifiers, or long-horizon behavior.
 
-### E4. SFT vs DPO?
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-**Answer:** SFT imitates target responses. DPO uses preference pairs to push preferred responses up relative to rejected responses and a reference model.
+---
 
-### E5. What is in-context learning?
+## Q4. What do temperature, top-k, and top-p sampling change?
 
-**Answer:** The model changes behavior based on examples/instructions in the prompt without updating weights.
+The model outputs logits over the vocabulary. Sampling controls how those probabilities are converted into the next token.
 
-### E6. Temperature vs top-p?
+**Temperature** rescales all logits. Lower temperature sharpens the distribution; higher temperature increases diversity.
 
-**Answer:** Temperature globally reshapes the probability distribution; top-p truncates to a variable-size high-probability nucleus before sampling.
+**Top-k** keeps only the k highest-probability candidates.
 
-### E7. Why use MoE?
+**Top-p (nucleus sampling)** keeps the smallest set whose cumulative probability exceeds a threshold p, so candidate-set size adapts to model uncertainty.
 
-**Answer:** MoE increases total parameter capacity while activating only a subset of experts for each token, reducing compute relative to a dense model of equal parameter count.
+**Design tradeoff.** Low-randomness decoding is stable and useful for deterministic tasks but can become repetitive. Higher randomness increases diversity but also the probability of unsupported or inconsistent generations.
 
+The correct decoding policy depends on the application rather than one universally best setting.
 
-## Whiteboard / drill questions
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-- Explain teacher forcing and exposure mismatch.
-- Why is perplexity insufficient for assistant evaluation?
-- How do SFT, RLHF, and DPO optimize different signals?
-- What happens to cost as context length increases?
-- Why can MoE increase parameters without proportional FLOPs?
+---
 
+## Q5. Why is perplexity not enough to evaluate an LLM?
 
-<!-- ADVANCED_QA_START -->
-## Advanced / system follow-ups
+Perplexity is the exponentiated average token Negative Log-Likelihood (NLL). It measures how well the model predicts held-out text under its tokenizer.
 
-### A1. Why does weight tying make sense?
+It does **not** directly measure:
+- instruction following;
+- factual accuracy;
+- safety;
+- reasoning;
+- code correctness;
+- tool-use reliability;
+- grounding.
 
-**Answer:** Input and output both concern token identity in the same vocabulary. Sharing embedding and output projection reduces parameters and encourages a common token geometry.
+Two models can have similar perplexity but very different post-training behavior.
 
-### A2. What is the difference between data contamination and overfitting?
+**Evaluation principle.** Match the metric to the desired behavior. Code should be evaluated with tests; RAG with grounding and retrieval; agents with task success/tool correctness; serving with latency and throughput.
 
-**Answer:** Contamination means evaluation examples or close variants appear in training data, invalidating benchmark independence. Overfitting is poor generalization from fitting training data too specifically; they are related but distinct.
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
 
-### A3. Why are sequence-level preference objectives harder than token-level SFT?
+---
 
-**Answer:** Preference labels score whole responses, so credit assignment across individual tokens is indirect. SFT provides direct next-token targets at every response position.
+## Q6. What is Mixture of Experts and why use it?
 
-### A4. Why is MoE harder to serve?
+A Mixture-of-Experts (MoE) layer contains multiple expert networks and a learned router. Each token is sent only to a small top-k subset.
 
-**Answer:** Even though only a subset of experts activates per token, routing can create irregular memory access, expert imbalance, and cross-device communication. Parameter storage can also be much larger than active FLOPs suggest.
+```math
+y
+=
+\sum_{i\in\operatorname{TopK}(g(x))}
+g_i(x)E_i(x).
+```
 
-### A5. How would you evaluate whether SFT added task competence rather than only formatting?
+**Key idea:** conditional computation. The model can have many total parameters while activating only part of them for each token.
 
-**Answer:** Use held-out task metrics, adversarial/new phrasings, and a base-model prompted baseline. Format-compliance gains alone do not prove improved underlying competence.
+**Benefit:** more capacity without proportional FLOPs.
 
-<!-- ADVANCED_QA_END -->
+**Costs:** routing imbalance, expert communication across devices, larger total parameter storage, and serving complexity. MoE therefore improves the parameter-to-compute ratio but is not “free capacity.”
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q7. Why does context length affect prefill and decode differently?
+
+During **prefill**, all prompt tokens are processed together. Dense attention over a prompt of length T has pairwise interaction scaling roughly with T², although optimized kernels reduce memory traffic.
+
+During **decode**, each new token attends to the cached history. The KV cache grows linearly with context length, and each step repeatedly reads large weights plus cache state.
+
+Therefore long context creates different bottlenecks in the two phases:
+- prefill: large parallel attention/compute;
+- decode: sequential generation, memory traffic, and cache capacity.
+
+A nominal long context window does not imply that using the maximum context is cheap or equally reliable for retrieval/reasoning.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+
+## Q8. Why do LLMs hallucinate?
+
+An LLM is optimized to produce probable continuations under its learned distribution, not to satisfy a formal truth constraint. If the prompt does not contain enough evidence, a linguistically plausible statement can still have high probability.
+
+Hallucination can be reduced through retrieval, tools, verifiers, improved post-training, grounding, and uncertainty/refusal behavior.
+
+**Key idea.** Hallucination is not one isolated softmax bug. It reflects a mismatch between the training objective—predict plausible tokens—and the application objective—produce statements that are verified and supported by evidence.
+
+**Likely follow-up:** connect the concept to an implementation, compare with the nearest alternative, and identify one failure mode.
+
+---
+

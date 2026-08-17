@@ -12,6 +12,39 @@ These are the concepts interviewers use to test whether later deep-learning answ
 - Explain generalization, regularization, bias–variance, calibration, and leakage.
 - Compare SGD, Momentum, Adam, and AdamW from their update rules.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **SGD** | Stochastic Gradient Descent | Mini-batch gradient optimizer. |
+| **Adam** | Adaptive Moment Estimation | Adaptive optimizer using first/second gradient moments. |
+| **AdamW** | Adam with decoupled Weight Decay | Separates weight decay from Adam's adaptive gradient scaling. |
+| **ROC-AUC** | Area Under the Receiver Operating Characteristic curve | Threshold-independent ranking metric. |
+| **PR-AUC** | Area Under the Precision–Recall curve | Useful for imbalanced positive classes. |
+| **ECE** | Expected Calibration Error | Confidence-calibration metric. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Start from the data-generating assumption, not the network
+
+A loss often corresponds to a probabilistic assumption. Mean-squared error is natural under Gaussian residuals; cross-entropy is categorical negative log-likelihood. Thinking this way tells you when a loss is appropriate and what alternatives mean.
+
+### Generalization is the real objective
+
+Training loss measures fit to observed samples, while deployment depends on the population distribution. Regularization, data splitting, augmentation, and validation all control the gap between fitting the sample and learning a transferable rule.
+
+### Metrics encode the cost of mistakes
+
+Accuracy is not automatically the right metric. Rare-positive problems often need precision/recall or PR-AUC; probability-driven decisions need calibration in addition to ranking accuracy.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Supervised vs unsupervised vs self-supervised learning
@@ -19,8 +52,8 @@ These are the concepts interviewers use to test whether later deep-learning answ
 - Train/validation/test split and data leakage
 - Bias–variance tradeoff, underfitting, overfitting
 - Regularization: L1, L2, weight decay, dropout, early stopping
-- Metrics: precision, recall, F1, ROC-AUC, PR-AUC, calibration
-- Optimization basics: SGD, momentum, Adam, AdamW
+- Metrics: precision, recall, F1 score, Area Under the Receiver Operating Characteristic curve (ROC-AUC), Area Under the Precision–Recall curve (PR-AUC), and calibration
+- Optimization: Stochastic Gradient Descent (SGD), momentum, Adaptive Moment Estimation (Adam), and Adam with decoupled Weight Decay (AdamW)
 - Learning-rate schedules, gradient clipping, batch-size effects
 - Class imbalance and sampling/weighting strategies
 - Cross-validation and distribution shift

@@ -12,19 +12,53 @@ Transformer knowledge is the central bridge connecting LLMs, ViTs, VLMs, multimo
 - Explain MHA, causal masking, RoPE, LayerNorm/RMSNorm.
 - Reason about KV cache, prefill/decode, GQA/MQA, and FlashAttention.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **MHA** | Multi-Head Attention | Multiple attention projection heads. |
+| **MQA** | Multi-Query Attention | Many query heads share one K/V head. |
+| **GQA** | Grouped-Query Attention | Groups of query heads share K/V heads. |
+| **FFN** | Feed-Forward Network | Per-token nonlinear channel-mixing block. |
+| **RoPE** | Rotary Position Embedding | Position encoding by rotating Q/K features. |
+| **KV cache** | Key–Value cache | Cached past attention states during decode. |
+| **RMSNorm** | Root Mean Square Normalization | Normalization using feature RMS. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Attention is content-dependent information routing
+
+Q/K/V parameterize what a token seeks, what another token advertises, and what content should be transferred. Unlike convolution, the connection weights depend on the current input.
+
+### A Transformer alternates token mixing and feature mixing
+
+Attention mixes across positions; the FFN transforms features within each token. Residual connections and normalization make repeated composition trainable.
+
+### Prefill and decode are different systems problems
+
+Prefill handles a full prompt with large parallel matrix operations; decode adds tokens sequentially while rereading model weights and KV cache. This explains why FlashAttention, GQA, quantization, and batching help differently.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Token embeddings and sequence representations
-- Q/K/V and scaled dot-product attention
-- Multi-head attention
+- Query / Key / Value (Q/K/V) projections and scaled dot-product attention
+- Multi-Head Attention (MHA)
 - Causal vs bidirectional attention
 - Feed-forward networks and residual blocks
-- LayerNorm / RMSNorm
-- Absolute, relative and rotary positional embeddings (RoPE)
+- Layer Normalization (LayerNorm) and Root Mean Square Normalization (RMSNorm)
+- Absolute, relative, and Rotary Position Embedding (RoPE)
 - Attention complexity O(N^2)
-- KV cache, prefill and decode
+- Key–Value (KV) cache, prompt prefill, and autoregressive decode
 - FlashAttention intuition
-- Mixture-of-Experts routing
+- Mixture-of-Experts (MoE) routing
 
 
 ---

@@ -12,6 +12,39 @@ This chapter covers the model and training stack behind modern language foundati
 - Distinguish base models, SFT, RLHF, DPO, and in-context learning.
 - Explain scaling, MoE, context windows, and inference constraints.
 
+## Terminology and abbreviations
+
+Do not memorize an abbreviation before you understand what object it refers to.
+
+| Term | Full name | Role in this chapter |
+|---|---|---|
+| **LLM** | Large Language Model | Large pretrained token-sequence model. |
+| **SFT** | Supervised Fine-Tuning | Instruction/response supervised post-training. |
+| **RLHF** | Reinforcement Learning from Human Feedback | Preference-based reward/policy optimization. |
+| **DPO** | Direct Preference Optimization | Direct pairwise preference training. |
+| **MoE** | Mixture of Experts | Conditional computation via routed experts. |
+| **PPL** | Perplexity | Exponentiated average token negative log-likelihood. |
+
+For the repository-wide list, see [`../GLOSSARY.md`](../GLOSSARY.md).
+
+
+## Big picture and design philosophy
+
+### Pretraining learns a predictive model of token sequences
+
+Next-token prediction is simple, but across massive heterogeneous corpora it requires syntax, semantics, code, factual associations, and task patterns.
+
+### Post-training shapes behavior
+
+SFT teaches instruction-response behavior; RLHF/DPO teach preferences among plausible responses. The model still produces conditional next-token probabilities.
+
+### LLM quality is multi-dimensional
+
+Perplexity does not directly measure factuality, instruction following, safety, tool use, or code correctness. Evaluation must match the target behavior.
+
+> **How to read the equations below:** first identify the problem, what each variable represents, why this formulation was chosen, and what tradeoff it introduces. The equation is the precise implementation of the idea—not the idea itself.
+
+
 ## Chapter map
 
 - Tokenization: BPE/SentencePiece intuition
@@ -19,11 +52,11 @@ This chapter covers the model and training stack behind modern language foundati
 - Next-token prediction objective
 - Scaling: parameters, tokens, compute
 - Base model vs instruction-following model
-- Supervised fine-tuning (SFT)
-- Preference learning: RLHF and DPO
+- Supervised Fine-Tuning (SFT)
+- Preference learning: Reinforcement Learning from Human Feedback (RLHF) and Direct Preference Optimization (DPO)
 - In-context learning and prompting
 - Sampling: temperature, top-k, top-p
-- MoE LLMs
+- Mixture-of-Experts (MoE) Large Language Models (LLMs)
 - Context windows, KV cache and inference bottlenecks
 
 
@@ -40,7 +73,7 @@ For tokens $x_1,\ldots,x_T$:
 p(x_{1:T})
 =
 \prod_{t=1}^T
-p(x_t|x_{<t}).
+p(x_t|x_{1:t-1}).
 ```
 
 
@@ -51,7 +84,7 @@ Maximum likelihood minimizes
 \mathcal L
 =
 -\sum_{t=1}^T
-\log p_\theta(x_t|x_{<t}).
+\log p_\theta(x_t|x_{1:t-1}).
 ```
 
 
@@ -111,7 +144,7 @@ Average token NLL:
 ```math
 \mathrm{NLL}
 =
--\frac1T\sum_t\log p(x_t|x_{<t}).
+-\frac1T\sum_t\log p(x_t|x_{1:t-1}).
 ```
 
 
@@ -206,7 +239,7 @@ Given instruction $x$, target response $y$:
 \mathcal L_{\rm SFT}
 =
 -\sum_{t\in \text{response}}
-\log p_\theta(y_t|x,y_{<t}).
+\log p_\theta(y_t|x,y_{1:t-1}).
 ```
 
 
@@ -501,7 +534,7 @@ Formally:
 ```math
 \mathcal L
 =
--\sum_t m_t\log p(y_t|y_{<t}),
+-\sum_t m_t\log p(y_t|y_{1:t-1}),
 \qquad
 m_t\in\{0,1\}.
 ```
@@ -787,7 +820,7 @@ conditional log probability is
 \log\pi_\theta(y|x)
 =
 \sum_t
-\log\pi_\theta(y_t|x,y_{<t}).
+\log\pi_\theta(y_t|x,y_{1:t-1}).
 ```
 
 
